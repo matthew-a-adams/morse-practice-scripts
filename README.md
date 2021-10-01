@@ -40,4 +40,5 @@ Output: [output.mp3](https://raw.githubusercontent.com/cduck/morse/master/output
 - [NumPy](http://www.numpy.org/)
 - [SciPy](http://www.scipy.org/)
 - [sounddevice](http://pypi.python.org/pypi/sounddevice/) which also needs [PortAudio](http://www.portaudio.com/)
-
+- [pydub](https://github.com/jiaaro/pydub) 
+- [pyttsx3](https://pyttsx3.readthedocs.io/en/latest/) 
