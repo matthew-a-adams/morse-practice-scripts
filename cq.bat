@@ -1,3 +1,3 @@
 @ECHO OFF
-python "%~dp0\cq_test.py" --wpm 20 --fs 4
+python "%~dp0\qso_trainer.py" --wpm 24 --fs 4
 @PAUSE

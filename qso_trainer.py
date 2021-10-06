@@ -17,63 +17,126 @@ FS = 10
 AUDIO_PADDING = 0.5  # Seconds
 CLICK_SMOOTH = 2  # Tone periods
 
+class Person:
+  def __init__(self, sign, name, location, rig, pwr, ant):
+    self.sign = sign
+    self.name = name
+    self.location = location
+    self.rig = rig
+    self.pwr = pwr
+    self.ant = ant
+    self.rst = str(random.randrange(1,5)) + str(random.randrange(1,9)) + str(random.randrange(1,9))
 
-def main(freq, wpm, fs, prompt, outFile):
+def main(freq, wpm, fs, force, outFile, inFile):
 
-  test_message = ['E', 'T', 'A', 'N', 'S', 'I', 'O', 'R', 'H', 'D', 'L', 'U', 'C', 'W', 'M', 'F', 'Y', 'P',  'G', 'B', 'V', '1', '2', '3', '4', '5', '6', '7', '9', ',', '.', '?', '/', '=']
-  random.shuffle(test_message)
+  call_signs = []
 
-  #print('Message =', message)
+  # Read from file in file provided
+  #if len(inFile) > 0:
+  #  file_handle = open(inFile, 'r')
+  #  lines = file_handle.readlines()
+  #  for line in lines:
+  #    call_signs.append(line[:-1])
+  #else:
+  #  call_signs = ['KD2WAI', 'KO4HMB', 'KD2HCU', 'N1PRR', 'W8OV']
+  operator = []
 
-  if prompt:
-    # Load spoken letter WAV files
-    letterNames = loadLetterNames()
-    sps = letterNames[LETTERS[0]][0]
-  else:
-    sps = SPS
+  operator.append(Person('KD2WAI', 'MATT', 'SCHNECTADY, NY',      'IC7300',      '100W', 'EFHW'))
+  operator.append(Person('KO4HMB', 'DAVE', 'DANVILLE, VA',        'FT991A',      '5W',   'HAMSTICK'))
+  operator.append(Person('KD2HCU', 'ERIC', 'YAPSHANK, NY',        'YEASU 817',   '50W',  'DIPOLE'))
+  operator.append(Person('N1PRR',  'GARY', 'LITCHFIELD PARK, AZ', 'IC705',       '50W',  'SOTA'))
+  operator.append(Person('W8OV',   'DAVE', 'COLLIN, TX',          'ELECRAFT K3', '100W', 'W RADIALS'))
+
+  random.shuffle(call_signs)
+
+
+  sps = SPS
+
   print('Audio samples per second =', sps)
   print('Tone period     =', round(1000/freq, 1), 'ms')
 
   dps = morse.wpmToDps(wpm)  # Dots per second
   mspd = 1000/dps  # Dot duration in milliseconds
   farnsworthScale = morse.farnsworthScaleFactor(wpm, fs)
+
+  print()
   print('Dot width       =', round(mspd, 1), 'ms')
   print('Dash width      =', int(round(mspd * morse.DASH_WIDTH)), 'ms')
   print('Character space =', int(round(mspd * morse.CHAR_SPACE * farnsworthScale)), 'ms')
   print('Word space      =', int(round(mspd * morse.WORD_SPACE * farnsworthScale)), 'ms')
 
-  continue_with_test = True
+  print()
+  print("Hit <ENTER> to start.")
+  input()
 
-  while continue_with_test:
+  caller = operator[0]
+  callee = operator[1]
 
-    missed_count = 0
-    continue_with_test = False
-    retest_messages = []
+  # CALLER: Is this frequency in use...
+  playAndCheckMessage('QRL? QRL?', sps, wpm, fs, freq)
+  playAndCheckMessage(random.choice(['QRL', 'A', 'L', 'Y', 'YES', '']), sps, wpm, fs, freq)
 
-    for message in test_message:
+  # CALLER: Request contact
+  playAndCheckMessage('CQ CQ CQ DE ' + caller.sign + ' ' +caller.sign + ' K', sps, wpm, fs, freq)
 
-      # Compute morse code audio from plain text
-      playMessage(message, sps, wpm, fs, freq)
+  # CALLEE: Respond to CQ
+  playAndCheckMessage(caller.sign + ' DE ' + callee.sign + ' ' + callee.sign + ' K', sps, wpm, fs, freq)
 
-      print('Enter message:')
-      start = time.time()
-      check = msvcrt.getch()
+  # CALLER: Response confirmation
+  playAndCheckMessage(callee.sign + ' DE ' + caller.sign + ' BT', sps, wpm, fs, freq)
 
-      print(chr(ord(check)).upper())
+  # CALLER: Request slower speed
+  playAndCheckMessage(random.choice(['QRS', 'QRS PLS', 'QRS PSE', '']), sps, wpm, fs, freq)
 
-      if ord(check) == ord(message.lower()):
-        end = time.time()
-        print('Correct! [', '{:.2f}'.format(end-start), 's]')
-      else:
-        print('Wrong. The correct answer is ', chr(ord(message)))
-        retest_messages.append(message)
-        continue_with_test = True
-        missed_count = missed_count + 1
+  # CALLER: Send thanks for the call
+  playAndCheckMessage(random.choice(['GM ', 'GA ', 'GE ', '']) + 'THX ' + random.choice(['FOR ', 'FER ', '']) + 'CALL BT', sps, wpm, fs, freq)
 
-    print('You missed ', missed_count, '. Retesting missed letters...')
-    test_message = retest_messages
+  # CALLER: Signal report
+  playAndCheckMessage('UR RST IS '+ callee.rst + ' ' + callee.rst, sps, wpm, fs, freq)
+
+  # CALLER: Location
+  playAndCheckMessage(random.choice(['IN ', 'QTH ']) + caller.location, sps, wpm, fs, freq)
+
+  # CALLER: Name
+  playAndCheckMessage('NAME IS ' + caller.name + ' ' + caller.name, sps, wpm, fs, freq)
+
+  # CALLER: Back to callee
+  playAndCheckMessage(random.choice(['BTU', 'HW CPY?']) + caller.name + ' ' + caller.name, sps, wpm, fs, freq)
+
+  # CALLER: Send thanks for the call
+  playAndCheckMessage(random.choice(['GM ', 'GA ', 'GE ', '']) + 'THX ' + random.choice('FOR ', 'FER ', '') + 'CALL BT', sps, wpm, fs, freq)
+
+  # CALLEE: Signal report
+  playAndCheckMessage('THX UR RST IS '+ callee.rst + ' ' + callee.rst, sps, wpm, fs, freq)
+
+  # CALLEE: Location
+  playAndCheckMessage(random.choice(['IN ', 'QTH ']) + callee.location, sps, wpm, fs, freq)
+
+  # CALLEE: Name
+  playAndCheckMessage('NAME IS ' + callee.name + ' ' + callee.name, sps, wpm, fs, freq)
+
+  # CALLEE: Back to caller
+  playAndCheckMessage(random.choice(['BTU', 'HW CPY?']) + callee.name + ' ' + callee.name, sps, wpm, fs, freq)
+
+def playAndCheckMessage(message, sps, wpm, fs, freq):
+
+  if message == '':
+    return
+
+  playMessage(message, sps, wpm, fs, freq)
+
+  print('Enter message:')
+  start = time.time()
+  check = input()
+
+  if check.upper() == message.upper():
+    end = time.time()
+    print('Correct! [', '{:.2f}'.format(end - start), 's]')
+  else:
+    print('Wrong. The correct answer is ', message)
 
 def playMessage(message, sps, wpm, fs, freq):
+
   audio = stringToMorseAudio(message, sps, wpm, fs, freq, 0.5, None, promptVolume=0.3)
   audio /= 2
 
@@ -170,9 +233,10 @@ if __name__ == '__main__':
   parser.add_argument('-f', type=float, default=FREQ, help='Tone frequency')
   parser.add_argument('--wpm', type=float, default=WPM, help='Words per minute')
   parser.add_argument('--fs', type=float, default=FS, help='Farnsworth speed')
-  parser.add_argument('-p', action='store_true', default=False, help='Say letters along with morse code')
+  parser.add_argument('--force', action='store_true', default=False, help='Force user to get the answer correct before completing')
   parser.add_argument('-o', type=str, default='', help='Output to given WAV file instead of playing sound')
+  parser.add_argument('-i', type=str, default='', help='Input from text file')
   args = parser.parse_args()
 
-  main(args.f, args.wpm, args.fs, args.p, args.o)
+  main(args.f, args.wpm, args.fs, args.force, args.o, args.i)
 

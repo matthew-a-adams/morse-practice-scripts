@@ -28,7 +28,7 @@ def main(freq, wpm, fs, quick, prompt, outFile):
                 ['P', 'G', '7', '9', '/'],        # Session 7
                 ['B', 'V', '='] ,                 # Session 8
                 ['K', 'J', '8', '0'] ,            # Session 9
-                ['X', 'Q', 'Z']                    # Session 10
+                ['X', 'Q', 'Z']                   # Session 10
   ]
 
   if prompt:

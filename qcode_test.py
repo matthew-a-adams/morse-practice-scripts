@@ -17,24 +17,38 @@ FS = 10
 AUDIO_PADDING = 0.5  # Seconds
 CLICK_SMOOTH = 2  # Tone periods
 
-def main(freq, wpm, fs, force, outFile, inFile):
+def main(freq, wpm, fs, prompt, outFile):
+  qcodes = [
+    ['QRG', 'EXACT FEQUENCY'],
+    ['QRL', 'BUSY'],
+    ['QRM', 'INTERFERENCE'],
+    ['QRN', 'NOISE'],
+    ['QRO', 'INCREASE POWER'],
+    ['QRP', 'DECREASE POWER'],
+    ['QRQ', 'SEND FASTER'],
+    ['QRS', 'SEND SLOWER'],
+    ['QRT', 'STOP SENDING'],
+    ['QRU', 'HAVE NOTHING'],
+    ['QRV', 'READY'],
+    ['QRX', 'CALL AT TIME'],
+    ['QRZ', 'CALLER'],
+    ['QSB', 'SIGNAL FADING'],
+    ['QSK', 'HEAR BETWEEN SIGNALS'],
+    ['QSL', 'ACKNOWLEDGE'],
+    ['QSO', 'COMMUNICATE WITH'],
+    ['QST', 'CALLING ALL'],
+    ['QSY', 'CHANGE TO FREQUENCY'],
+    ['QTH', 'LOCATION']
+  ]
 
-  call_signs = []
-
-  # Read from file in file provided
-  if len(inFile) > 0:
-    file_handle = open(inFile, 'r')
-    lines = file_handle.readlines()
-    for line in lines:
-      call_signs.append(line[:-1])
+  if prompt:
+    # Load spoken letter WAV files
+    letterNames = loadLetterNames()
+    sps = letterNames[LETTERS[0]][0]
   else:
-    call_signs = ['KD2WAI', 'KO4HMB', 'KD2HCU', 'N1PRR', 'W8OV']
-  random.shuffle(call_signs)
+    sps = SPS
 
-  #print('Message =', message)
-
-  sps = SPS
-
+  print()
   print('Audio samples per second =', sps)
   print('Tone period     =', round(1000/freq, 1), 'ms')
 
@@ -42,60 +56,50 @@ def main(freq, wpm, fs, force, outFile, inFile):
   mspd = 1000/dps  # Dot duration in milliseconds
   farnsworthScale = morse.farnsworthScaleFactor(wpm, fs)
 
-  print()
   print('Dot width       =', round(mspd, 1), 'ms')
   print('Dash width      =', int(round(mspd * morse.DASH_WIDTH)), 'ms')
   print('Character space =', int(round(mspd * morse.CHAR_SPACE * farnsworthScale)), 'ms')
   print('Word space      =', int(round(mspd * morse.WORD_SPACE * farnsworthScale)), 'ms')
-
   print()
-  print("Hit <ENTER> to start.")
-  input()
 
-  caller = call_signs[1]
-  callee = call_signs[2]
+  testMessages(qcodes, sps, wpm, fs, freq)
 
-  # Call initiated
-  message = 'CQ CQ CQ DE ' + caller + ' ' +caller + ' K'
-  playAndCheckMessage(message, sps, wpm, fs, freq)
+def testMessages(messages, sps, wpm, fs, freq):
 
-  # Call response
-  message = callee + ' DE ' + caller + ' ' + caller + ' AR'
-  playAndCheckMessage(message, sps, wpm, fs, freq)
+  random.shuffle(messages)
 
-  # Request slower speed
-  message = 'QRS PLS'
-  playAndCheckMessage(message, sps, wpm, fs, freq)
+  # Keep track of failed messages and retest until all have been correctly tested.
+  continue_with_test = True
 
-  # Send thanks for the call
-  time_of_day = ['GM ', 'GA ', 'GE ', '']
-  random.shuffle(time_of_day)
-  message = time_of_day[0] + 'THX CALL'
-  playAndCheckMessage(message, sps, wpm, fs, freq)
+  while continue_with_test:
 
-  # Send signal report
-  readability = random.randrange(1,5)
-  signal = random.randrange(1,9)
-  tone = random.randrange(1,9)
-  rst = str(readability) + str(signal) + str(tone)
-  message = 'UR RST IS '+ rst + ' ' + rst
-  playAndCheckMessage(message, sps, wpm, fs, freq)
+    missed_count = 0
+    continue_with_test = False
+    retest_messages = []
 
-def playAndCheckMessage(message, sps, wpm, fs, freq):
-  playMessage(message, sps, wpm, fs, freq)
+    for message, definition in messages:
 
-  print('Enter message:')
-  start = time.time()
-  check = input()
+      # Compute morse code audio from plain text
+      playMessage(message, sps, wpm, fs, freq)
 
-  if check.upper() == message.upper():
-    end = time.time()
-    print('Correct! [', '{:.2f}'.format(end - start), 's]')
-  else:
-    print('Wrong. The correct answer is ', message)
+      print('Enter message:')
+      start = time.time()
+      check = input()
+
+      if check.upper() == message.upper():
+        end = time.time()
+        print('Correct! [', '{:.2f}'.format(end-start), 's]')
+      else:
+        print('Wrong. The correct answer is ', message)
+        retest_messages.append([message, definition])
+        continue_with_test = True
+        missed_count = missed_count + 1
+
+    print('You missed ', missed_count, '. Retesting missed letters...')
+    messages = retest_messages
+
 
 def playMessage(message, sps, wpm, fs, freq):
-
   audio = stringToMorseAudio(message, sps, wpm, fs, freq, 0.5, None, promptVolume=0.3)
   audio /= 2
 
@@ -192,10 +196,9 @@ if __name__ == '__main__':
   parser.add_argument('-f', type=float, default=FREQ, help='Tone frequency')
   parser.add_argument('--wpm', type=float, default=WPM, help='Words per minute')
   parser.add_argument('--fs', type=float, default=FS, help='Farnsworth speed')
-  parser.add_argument('--force', action='store_true', default=False, help='Force user to get the answer correct before completing')
+  parser.add_argument('-p', action='store_true', default=False, help='Say letters along with morse code')
   parser.add_argument('-o', type=str, default='', help='Output to given WAV file instead of playing sound')
-  parser.add_argument('-i', type=str, default='', help='Input from text file')
   args = parser.parse_args()
 
-  main(args.f, args.wpm, args.fs, args.force, args.o, args.i)
+  main(args.f, args.wpm, args.fs, args.p, args.o)
 
