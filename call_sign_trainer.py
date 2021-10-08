@@ -17,7 +17,7 @@ FS = 10
 AUDIO_PADDING = 0.5  # Seconds
 CLICK_SMOOTH = 2  # Tone periods
 
-def main(freq, wpm, fs, limit, sign_type, prompt, outFile):
+def main(freq, wpm, fs, limit, sign_type, us_origin, prompt, outFile):
 
   if prompt:
     # Load spoken letter WAV files
@@ -39,17 +39,27 @@ def main(freq, wpm, fs, limit, sign_type, prompt, outFile):
 
   messages = []
 
+  if type == '':
+    prefix_character_count = random.choice([1, 3])
+    suffix_character_count = random.choice([0, 3])
+  else:
+    prefix_character_count = int(sign_type[0])
+    suffix_character_count = int(sign_type[-1]) - 1
+    print("Generating " + str(prefix_character_count) + 'x' + str(suffix_character_count + 1) + ' call signs.')
+
   for i in range(0, limit):
 
-    if type == '':
-      prefix_character_count = random.choice([1, 3])
-      suffix_character_count = random.choice([0, 3])
+    if us_origin:
+      if prefix_character_count == 1:
+        prefix = ''.join(random.choice(['K', 'N', 'W']))
+      else:
+        prefix = ''.join(random.choice(['A', 'K', 'N', 'W']) + random.choice(list(string.ascii_uppercase)))
+      suffix = ''.join(random.choices(list(string.ascii_uppercase), k = suffix_character_count+1))
     else:
-      prefix_character_count = int(sign_type[0])
-      suffix_character_count = int(sign_type[-1])-1
-      print("Generating " + str(prefix_character_count) + 'x' + str(suffix_character_count+1) + ' call signs.')
+      prefix = ''.join(random.choices(list(string.ascii_uppercase + string.digits), k = prefix_character_count))
+      suffix = ''.join(random.choices(list(string.ascii_uppercase + string.digits), k = suffix_character_count)) +  random.choice(list(string.ascii_uppercase))
 
-    messages.append(''.join(random.choices(list(string.ascii_uppercase + string.digits), k = prefix_character_count)) + random.choice(list(string.digits)) + ''.join(random.choices(list(string.ascii_uppercase + string.digits), k = suffix_character_count)) +  random.choice(list(string.ascii_uppercase)))
+    messages.append(prefix + random.choice(list(string.digits)) + suffix)
 
   testMessages(messages, sps, wpm, fs, freq)
 
@@ -187,9 +197,10 @@ if __name__ == '__main__':
   parser.add_argument('--fs', type=float, default=FS, help='Farnsworth speed')
   parser.add_argument('--limit', type=int, default=1, help='Limit to X queries')
   parser.add_argument('--type', type=str, default='', help='Call sign type, i.e. 1x3, 2x1, 2x3')
+  parser.add_argument('--us', action='store_true', default=True, help='Caller origin either US or international')
   parser.add_argument('-p', action='store_true', default=False, help='Say letters along with morse code')
   parser.add_argument('-o', type=str, default='', help='Output to given WAV file instead of playing sound')
   args = parser.parse_args()
 
-  main(args.f, args.wpm, args.fs, args.limit, args.type, args.p, args.o)
+  main(args.f, args.wpm, args.fs, args.limit, args.type, args.us, args.p, args.o)
 
