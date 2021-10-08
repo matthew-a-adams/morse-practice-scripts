@@ -6,6 +6,7 @@ import sounddevice as sd
 import numpy as np
 from scipy import io
 import scipy.io.wavfile
+import csv
 
 import morse
 
@@ -17,20 +18,31 @@ FS = 10
 AUDIO_PADDING = 0.5  # Seconds
 CLICK_SMOOTH = 2  # Tone periods
 
-def main(freq, wpm, fs, prompt, force, outFile, inFile):
+def main(freq, wpm, fs, prompt, force, limit, outFile, inFile):
 
   messages = []
 
   # Read from file in file provided
   if len(inFile) > 0:
-    file_handle = open(inFile, 'r')
-    lines = file_handle.readlines()
-    for line in lines:
-      messages.append(line[:-1])
+    if inFile.endswith('.csv'):
+      with open(inFile, newline='') as csvfile:
+        csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+        for row in csvreader:
+          messages.append(row)
+      definition = True
+    else :
+      file_handle = open(inFile, 'r')
+      lines = file_handle.readlines()
+      for line in lines:
+        messages.append(line[:-1])
   else:
     messages = ['E', 'T', 'A', 'N', 'S', 'I', 'O', 'R', 'H', 'D', 'L', 'U', 'C', 'W', 'M', 'F', 'Y', 'P', 'G', '1', '2',
                 '3', '4', '5', '6', '7', '9', ',', '.', '?', '/']
+
   random.shuffle(messages)
+
+  if limit > 0:
+    messages = random.choices(messages, k=limit)
 
   #print('Message =', message)
 
@@ -63,7 +75,10 @@ def main(freq, wpm, fs, prompt, force, outFile, inFile):
     continue_with_test = False
     retest_messages = []
 
-    for message in messages:
+    for entry in messages:
+
+      if definition:
+        message = entry[0]
 
       # Compute morse code audio from plain text
       playMessage(message, sps, wpm, fs, freq)
@@ -80,6 +95,10 @@ def main(freq, wpm, fs, prompt, force, outFile, inFile):
         retest_messages.append(message)
         continue_with_test = True
         missed_count = missed_count + 1
+
+      print()
+      print('\t' + entry[0] + ' - ' + entry[1])
+      print()
 
     print('You missed ', missed_count, '. ')
 
@@ -188,9 +207,10 @@ if __name__ == '__main__':
   parser.add_argument('--fs', type=float, default=FS, help='Farnsworth speed')
   parser.add_argument('-p', action='store_true', default=False, help='Say letters along with morse code')
   parser.add_argument('--force', action='store_true', default=False, help='Force user to get the answer correct before completing')
+  parser.add_argument('--limit', type=int, default=0, help='Limit to X queries')
   parser.add_argument('-o', type=str, default='', help='Output to given WAV file instead of playing sound')
   parser.add_argument('-i', type=str, default='', help='Input from text file')
   args = parser.parse_args()
 
-  main(args.f, args.wpm, args.fs, args.p, args.force, args.o, args.i)
+  main(args.f, args.wpm, args.fs, args.p, args.force, args.limit, args.o, args.i)
 
