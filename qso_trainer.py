@@ -66,8 +66,7 @@ def main(freq, wpm, fs, force, outFile, inFile):
   print("Hit <ENTER> to start.")
   input()
 
-  caller = random.choice(operator)
-  callee = random.choice(operator)
+  caller, callee = random.choices(operator, k=2)
 
   # CALLER: Is this frequency in use...
   playAndCheckMessage('QRL? QRL?', sps, wpm, fs, freq)
@@ -92,28 +91,28 @@ def main(freq, wpm, fs, force, outFile, inFile):
   playAndCheckMessage('UR RST IS '+ callee.rst + ' ' + callee.rst, sps, wpm, fs, freq)
 
   # CALLER: Location
-  playAndCheckMessage(random.choice(['IN ', 'QTH ']) + caller.location, sps, wpm, fs, freq)
+  playAndCheckMessage(random.choice(['IN ', 'QTH ']) + caller.location + ' ' + caller.location, sps, wpm, fs, freq)
 
   # CALLER: Name
   playAndCheckMessage('NAME IS ' + caller.name + ' ' + caller.name, sps, wpm, fs, freq)
 
   # CALLER: Back to callee
-  playAndCheckMessage(random.choice(['BTU', 'HW CPY?']) + caller.name + ' ' + caller.name, sps, wpm, fs, freq)
+  playAndCheckMessage(random.choice(['BTU', 'HW CPY?']), sps, wpm, fs, freq)
 
   # CALLER: Send thanks for the call
-  playAndCheckMessage(random.choice(['GM ', 'GA ', 'GE ', '']) + 'THX ' + random.choice('FOR ', 'FER ', '') + 'CALL BT', sps, wpm, fs, freq)
+  playAndCheckMessage(random.choice(['GM ', 'GA ', 'GE ', '']) + 'THX ' + random.choice(['FOR ', 'FER ', '']) + 'CALL BT', sps, wpm, fs, freq)
 
   # CALLEE: Signal report
   playAndCheckMessage('THX UR RST IS '+ callee.rst + ' ' + callee.rst, sps, wpm, fs, freq)
 
   # CALLEE: Location
-  playAndCheckMessage(random.choice(['IN ', 'QTH ']) + callee.location, sps, wpm, fs, freq)
+  playAndCheckMessage(random.choice(['IN ', 'QTH ']) + callee.location + ' ' + caller.location, sps, wpm, fs, freq)
 
   # CALLEE: Name
   playAndCheckMessage('NAME IS ' + callee.name + ' ' + callee.name, sps, wpm, fs, freq)
 
   # CALLEE: Back to caller
-  playAndCheckMessage(random.choice(['BTU', 'HW CPY?']) + callee.name + ' ' + callee.name, sps, wpm, fs, freq)
+  playAndCheckMessage(random.choice(['BTU', 'HW CPY?']), sps, wpm, fs, freq)
 
 def playAndCheckMessage(message, sps, wpm, fs, freq):
 
