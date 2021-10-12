@@ -1,2 +1,2 @@
 @ECHO OFF
-python "%~dp0\character_test.py" --wpm 25 --quick
+python "%~dp0\character_trainer.py" --wpm 26

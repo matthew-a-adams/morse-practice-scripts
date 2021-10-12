@@ -68,51 +68,127 @@ def main(freq, wpm, fs, force, outFile, inFile):
 
   caller, callee = random.choices(operator, k=2)
 
-  # CALLER: Is this frequency in use...
+  # CALLER
+
+  # Is this frequency in use...
   playAndCheckMessage('QRL? QRL?', sps, wpm, fs, freq)
   playAndCheckMessage(random.choice(['QRL', 'A', 'L', 'Y', 'YES', '']), sps, wpm, fs, freq)
 
-  # CALLER: Request contact
+  # Request contact
   playAndCheckMessage('CQ CQ CQ DE ' + caller.sign + ' ' +caller.sign + ' K', sps, wpm, fs, freq)
 
-  # CALLEE: Respond to CQ
+
+  # CALLEE
+
+  # Respond to CQ
   playAndCheckMessage(caller.sign + ' DE ' + callee.sign + ' ' + callee.sign + ' K', sps, wpm, fs, freq)
 
-  # CALLER: Response confirmation
+
+  # CALLER
+
+  # Response confirmation
   playAndCheckMessage(callee.sign + ' DE ' + caller.sign + ' BT', sps, wpm, fs, freq)
 
-  # CALLER: Request slower speed
+  # Request slower speed
   playAndCheckMessage(random.choice(['QRS', 'QRS PLS', 'QRS PSE', '']), sps, wpm, fs, freq)
 
-  # CALLER: Send thanks for the call
+  # Send thanks for the call
   playAndCheckMessage(random.choice(['GM ', 'GA ', 'GE ', '']) + 'THX ' + random.choice(['FOR ', 'FER ', '']) + 'CALL BT', sps, wpm, fs, freq)
 
-  # CALLER: Signal report
+  # Signal report
   playAndCheckMessage('UR RST IS '+ callee.rst + ' ' + callee.rst, sps, wpm, fs, freq)
 
-  # CALLER: Location
+  # Location
   playAndCheckMessage(random.choice(['IN ', 'QTH ']) + caller.location + ' ' + caller.location, sps, wpm, fs, freq)
 
-  # CALLER: Name
+  # Name
   playAndCheckMessage('NAME IS ' + caller.name + ' ' + caller.name, sps, wpm, fs, freq)
 
-  # CALLER: Back to callee
+  # Back to callee
   playAndCheckMessage(random.choice(['BTU', 'HW CPY?']), sps, wpm, fs, freq)
 
-  # CALLER: Send thanks for the call
-  playAndCheckMessage(random.choice(['GM ', 'GA ', 'GE ', '']) + 'THX ' + random.choice(['FOR ', 'FER ', '']) + 'CALL BT', sps, wpm, fs, freq)
+  # Confirmation info
+  playAndCheckMessage(callee.sign + ' DE ' + caller.sign + ' K', sps, wpm, fs, freq)
 
-  # CALLEE: Signal report
-  playAndCheckMessage('THX UR RST IS '+ callee.rst + ' ' + callee.rst, sps, wpm, fs, freq)
 
-  # CALLEE: Location
-  playAndCheckMessage(random.choice(['IN ', 'QTH ']) + callee.location + ' ' + caller.location, sps, wpm, fs, freq)
+  # CALLEE
 
-  # CALLEE: Name
+  # Confirmation info
+  playAndCheckMessage(caller.sign + ' DE ' + callee.sign +  K', sps, wpm, fs, freq)
+
+  # Signal report
+  playAndCheckMessage('THX UR RST IS '+ caller.rst + ' ' + caller.rst, sps, wpm, fs, freq)
+
+  # Location
+  playAndCheckMessage(random.choice(['IN ', 'QTH ']) + callee.location + ' ' + callee.location, sps, wpm, fs, freq)
+
+  # Name
   playAndCheckMessage('NAME IS ' + callee.name + ' ' + callee.name, sps, wpm, fs, freq)
 
-  # CALLEE: Back to caller
+  # Back to caller
   playAndCheckMessage(random.choice(['BTU', 'HW CPY?']), sps, wpm, fs, freq)
+
+  # Confirmation info
+  playAndCheckMessage(caller.sign + ' DE ' + callee.sign + ' K', sps, wpm, fs, freq)
+
+
+  # CALLER
+
+  # Confirmation info
+  playAndCheckMessage(callee.sign + ' DE ' + caller.sign, sps, wpm, fs, freq)
+
+  # Send thanks for info
+  playAndCheckMessage(random.choice(['THX ', 'THANKS ']) + random.choice(['FOR ', 'FER ', '']) + 'INFO BT',  sps, wpm, fs, freq)
+
+  # Rig info
+  playAndCheckMessage('RIG ' + random.choice(['HERE ', 'HR ', ''])  + 'IS ' + caller.rig + ' AT ' + caller.pwr + 'W BT', sps, wpm, fs, freq)
+
+  # Antenna
+  playAndCheckMessage('ANT IS ' + caller.ant + ' BT', sps, wpm, fs, freq)
+
+  # Back to callee
+  playAndCheckMessage(random.choice(['BTU', 'HW CPY?']), sps, wpm, fs, freq)
+
+  # Confirmation info
+  playAndCheckMessage(callee.sign + ' DE ' + caller.sign + ' K', sps, wpm, fs, freq)
+
+  # CALLEE
+
+  # Confirmation info
+  playAndCheckMessage(caller.sign + ' DE ' + callee.sign, sps, wpm, fs, freq)
+
+  # Send thanks for info
+  playAndCheckMessage(random.choice(['THX ', 'THANKS ']) + random.choice(['FOR ', 'FER ', '']) + 'INFO BT',  sps, wpm, fs, freq)
+
+  # Rig info
+  playAndCheckMessage('RIG ' + random.choice(['HERE ', 'HR ', ''])  + 'IS ' + callee.rig + ' AT ' + callee.pwr + 'W BT', sps, wpm, fs, freq)
+
+  # Antenna
+  playAndCheckMessage('ANT IS ' + callee.ant + ' BT', sps, wpm, fs, freq)
+
+  # Back to caller
+  playAndCheckMessage(random.choice(['BTU', 'HW CPY?']), sps, wpm, fs, freq)
+
+  # Confirmation info
+  playAndCheckMessage(caller.sign + ' DE ' + callee.sign + ' K', sps, wpm, fs, freq)
+
+
+  # CALLER
+
+  # Send thanks for info
+  playAndCheckMessage(random.choice(['THX ', 'THANKS ']) + random.choice(['FOR ', 'FER ', '']) + 'QSO ' + callee.name + ' ES 73',  sps, wpm, fs, freq)
+
+  # Confirmation info
+  playAndCheckMessage(callee.sign + ' DE ' + caller.sign + ' SK', sps, wpm, fs, freq)
+
+
+  # CALLEE
+
+  # Send thanks for info
+  playAndCheckMessage(random.choice(['THX ', 'THANKS ']) + random.choice(['FOR ', 'FER ', '']) + 'QSO ' + caller.name + ' ES 73',  sps, wpm, fs, freq)
+
+  # Confirmation info
+  playAndCheckMessage(caller.sign + ' DE ' + callee.sign + ' SK', sps, wpm, fs, freq)
 
 def playAndCheckMessage(message, sps, wpm, fs, freq):
 
