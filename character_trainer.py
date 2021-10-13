@@ -17,7 +17,35 @@ FS = 10
 AUDIO_PADDING = 0.5  # Seconds
 CLICK_SMOOTH = 2  # Tone periods
 
-def main(freq, wpm, fs, quick, prompt, outFile):
+class CharacterStatistics:
+
+  def __init__(self, char):
+    self.count  = 0
+    self.average = 0
+
+class Statistics:
+
+  def __init__(self, characters):
+    self.count = {}
+    self.average = {}
+    for session in characters:
+      for character  in session:
+        self.count[character] = 0
+        self.average[character] = float(0)
+
+  def update(self, character, time):
+    self.count[character] = self.count[character] + 1
+    print('Updated character count to ' + str(self.count[character]))
+
+    self.average[character] = float(self.average[character] + time) / float(self.count[character])
+
+  def show(self):
+    for char, ave in sorted(self.average.items()):
+      if self.count[char] > 0:
+        print(char + ' [', '{:.2f}'.format(ave), 's]')
+
+
+def main(freq, wpm, fs, quick, session, prompt, outFile):
   sessions = [
                 ['E', 'T', 'A', 'N'],             # Session 1
                 ['O', 'S', 'I', '1', '4'],        # Session 2
@@ -30,6 +58,8 @@ def main(freq, wpm, fs, quick, prompt, outFile):
                 ['K', 'J', '8', '0'] ,            # Session 9
                 ['X', 'Q', 'Z']                   # Session 10
   ]
+
+  run_statistics = Statistics(sessions)
 
   if prompt:
     # Load spoken letter WAV files
@@ -60,7 +90,10 @@ def main(freq, wpm, fs, quick, prompt, outFile):
   else:
     # Loop through all sets staring with the newest. After completing the newest sets and the next set to the newest
     # and retest. Continue to add the next newest set and retest until all the way through.
-    session_sets = len(sessions)
+    if session == '':
+      session_sets = len(sessions)
+    else:
+      session_sets = session
 
     for group_end in range(session_sets-1, -1, -1):
 
@@ -71,9 +104,11 @@ def main(freq, wpm, fs, quick, prompt, outFile):
       for set in sets:
         messages = messages + sessions[set-1]
 
-      testMessages(messages, sps, wpm, fs, freq)
+      run_statistics = testMessages(messages, run_statistics, sps, wpm, fs, freq)
 
-def testMessages(messages, sps, wpm, fs, freq):
+      run_statistics.show()
+
+def testMessages(messages, run_statistics, sps, wpm, fs, freq):
 
   random.shuffle(messages)
 
@@ -100,6 +135,7 @@ def testMessages(messages, sps, wpm, fs, freq):
       if ord(check) == ord(message.lower()):
         end = time.time()
         print('Correct! [', '{:.2f}'.format(end - start), 's]')
+        run_statistics.update(chr(ord(check)).upper(), end - start)
       else:
         print('Wrong. The correct answer is ', chr(ord(message)))
         retest_messages.append(message)
@@ -108,6 +144,8 @@ def testMessages(messages, sps, wpm, fs, freq):
 
     print('You missed ', missed_count, '. Retesting missed letters...')
     messages = retest_messages
+
+  return run_statistics
 
 
 def playMessage(message, sps, wpm, fs, freq):
@@ -208,9 +246,10 @@ if __name__ == '__main__':
   parser.add_argument('--wpm', type=float, default=WPM, help='Words per minute')
   parser.add_argument('--fs', type=float, default=FS, help='Farnsworth speed')
   parser.add_argument('--quick', action='store_true', default=False, help='Short test (once through each letter)')
+  parser.add_argument('--session', type=str, default='', help='CWA test session charcter set')
   parser.add_argument('-p', action='store_true', default=False, help='Say letters along with morse code')
   parser.add_argument('-o', type=str, default='', help='Output to given WAV file instead of playing sound')
   args = parser.parse_args()
 
-  main(args.f, args.wpm, args.fs, args.quick, args.p, args.o)
+  main(args.f, args.wpm, args.fs, args.quick, args.session, args.p, args.o)
 
