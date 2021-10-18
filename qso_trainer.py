@@ -43,8 +43,8 @@ def main(freq, wpm, fs, force, outFile, inFile):
 
   operator.append(Person('KD2WAI', 'MATT', 'SCHNECTADY, NY',      'IC7300',      '100W', 'EFHW'))
   operator.append(Person('KO4HMB', 'DAVE', 'DANVILLE, VA',        'FT991A',      '5W',   'HAMSTICK'))
-  operator.append(Person('KD2HCU', 'ERIC', 'YAPSHANK, NY',        'YEASU 817',   '50W',  'DIPOLE'))
-  operator.append(Person('N1PRR',  'GARY', 'LITCHFIELD PARK, AZ', 'IC705',       '50W',  'SOTA'))
+  operator.append(Person('KD2HCU', 'ERIC', 'YAPSHANK, NY',        'YEASU 817',   '50W',  'WIRE'))
+  operator.append(Person('N1PRR',  'GARY', 'LITCHFIELD PARK, AZ', 'IC705',       '50W',  'SOTA DIPOLE'))
   operator.append(Person('W8OV',   'DAVE', 'COLLIN, TX',          'ELECRAFT K3', '100W', 'W RADIALS'))
 
   sps = SPS
@@ -114,7 +114,7 @@ def main(freq, wpm, fs, force, outFile, inFile):
   # CALLEE
 
   # Confirmation info
-  playAndCheckMessage(caller.sign + ' DE ' + callee.sign +  K', sps, wpm, fs, freq)
+  playAndCheckMessage(caller.sign + ' DE ' + callee.sign +  ' K', sps, wpm, fs, freq)
 
   # Signal report
   playAndCheckMessage('THX UR RST IS '+ caller.rst + ' ' + caller.rst, sps, wpm, fs, freq)
@@ -141,7 +141,7 @@ def main(freq, wpm, fs, force, outFile, inFile):
   playAndCheckMessage(random.choice(['THX ', 'THANKS ']) + random.choice(['FOR ', 'FER ', '']) + 'INFO BT',  sps, wpm, fs, freq)
 
   # Rig info
-  playAndCheckMessage('RIG ' + random.choice(['HERE ', 'HR ', ''])  + 'IS ' + caller.rig + ' AT ' + caller.pwr + 'W BT', sps, wpm, fs, freq)
+  playAndCheckMessage('RIG ' + random.choice(['HERE ', 'HR ', ''])  + 'IS ' + caller.rig + ' AT ' + caller.pwr + ' BT', sps, wpm, fs, freq)
 
   # Antenna
   playAndCheckMessage('ANT IS ' + caller.ant + ' BT', sps, wpm, fs, freq)

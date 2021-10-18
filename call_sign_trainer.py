@@ -17,7 +17,7 @@ FS = 10
 AUDIO_PADDING = 0.5  # Seconds
 CLICK_SMOOTH = 2  # Tone periods
 
-def main(freq, wpm, fs, limit, sign_type, us_origin, prompt, outFile):
+def main(freq, wpm, fs, limit, sign_type, us_origin, repeat, prompt, outFile):
 
   if prompt:
     # Load spoken letter WAV files
@@ -61,9 +61,9 @@ def main(freq, wpm, fs, limit, sign_type, us_origin, prompt, outFile):
 
     messages.append(prefix + random.choice(list(string.digits)) + suffix)
 
-  testMessages(messages, sps, wpm, fs, freq)
+  testMessages(messages, repeat, sps, wpm, fs, freq)
 
-def testMessages(messages, sps, wpm, fs, freq):
+def testMessages(messages, repeat, sps, wpm, fs, freq):
 
   random.shuffle(messages)
 
@@ -78,8 +78,12 @@ def testMessages(messages, sps, wpm, fs, freq):
 
     for message in messages:
 
-      # Compute morse code audio from plain text
-      playMessage(message, sps, wpm, fs, freq)
+      # Compute and play morse code audio from plain text
+      if repeat:
+        repeat_message = message + ' ' + message
+        playMessage(repeat_message, sps, wpm, fs, freq)
+      else :
+        playMessage(message, sps, wpm, fs, freq)
 
       print('Enter message:')
       start = time.time()
@@ -198,9 +202,10 @@ if __name__ == '__main__':
   parser.add_argument('--limit', type=int, default=1, help='Limit to X queries')
   parser.add_argument('--type', type=str, default='', help='Call sign type, i.e. 1x3, 2x1, 2x3')
   parser.add_argument('--us', action='store_true', default=True, help='Caller origin either US or international')
+  parser.add_argument('--repeat', action='store_true', default=True, help='Play the call sign code twice')
   parser.add_argument('-p', action='store_true', default=False, help='Say letters along with morse code')
   parser.add_argument('-o', type=str, default='', help='Output to given WAV file instead of playing sound')
   args = parser.parse_args()
 
-  main(args.f, args.wpm, args.fs, args.limit, args.type, args.us, args.p, args.o)
+  main(args.f, args.wpm, args.fs, args.limit, args.type, args.us, args.repeat, args.p, args.o)
 
