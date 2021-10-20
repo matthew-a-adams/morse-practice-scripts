@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from __future__ import division, print_function
-import string, time, random, msvcrt, pyttsx3
+import string, time, random, itertools, msvcrt, pyttsx3
 import sounddevice as sd
 import numpy as np
 from scipy import io
@@ -23,13 +23,22 @@ AUDIO_PADDING = 0.5  # Seconds
 CLICK_SMOOTH = 2  # Tone periods
 
 
-def main(freq, wpm, fs, delay, obfuscate, prompt, outFile, inFile):
+def main(freq, wpm, fs, characters, limit, delay, obfuscate, prompt, outFile, inFile):
 
   if len(inFile) > 0:
     file_handle = open(inFile, 'r')
     messages = file_handle.readlines()
   else:
-    messages = []
+    messages = list(string.ascii_uppercase + string.digits + '.?,/=')
+    if characters > 0:
+      combinations = list(itertools.combinations(messages, characters))
+      messages = []
+      for combo in combinations:
+        message = ''.join(combo)
+        messages.append(message)
+
+  if limit > 0:
+    messages = random.choices(messages, k=limit)
 
   #print('Message =', message)
 
@@ -55,8 +64,9 @@ def main(freq, wpm, fs, delay, obfuscate, prompt, outFile, inFile):
 
   for message in messages:
 
-    # Chope newline character
-    message = message[:-1]
+    # Chope newline character for file input
+    if len(inFile) > 0:
+      message = message[:-1]
 
     # Compute morse code audio from plain text
     #playMessage(message, sps, wpm, fs, freq)
@@ -73,18 +83,34 @@ def main(freq, wpm, fs, delay, obfuscate, prompt, outFile, inFile):
 
     say = ''
 
-    if message == '.':
-      say = 'PERIOD'
-    elif message == '?':
-      say = 'QUESTION MARK'
-    elif message == ',':
-      say = 'COMMA'
-    elif message == '/':
-      say = 'FORWARD SLASH'
-    elif message == '=':
-      say = 'DOUBLE DASH'
+    if characters > 0:
+      say = ''
+      for character in message:
+        if character == '.':
+          say = say + 'PERIOD  '
+        elif character == '?':
+          say = say + 'QUESTION MARK  '
+        elif character == ',':
+          say = say + 'COMMA  '
+        elif character == '/':
+          say = say + 'FORWARD SLASH  '
+        elif character == '=':
+          say = say + 'DOUBLE DASH  '
+        else:
+          say = say + character + '  '
     else:
-      say = message
+      if message == '.':
+        say = 'PERIOD'
+      elif message == '?':
+        say = 'QUESTION MARK'
+      elif message == ',':
+        say = 'COMMA'
+      elif message == '/':
+        say = 'FORWARD SLASH'
+      elif message == '=':
+        say = 'DOUBLE DASH'
+      else:
+        say = message
 
     synthesizer.save_to_file(say, 'voice.mp3')
     synthesizer.runAndWait()
@@ -227,12 +253,14 @@ if __name__ == '__main__':
   parser.add_argument('-f', type=float, default=FREQ, help='Tone frequency')
   parser.add_argument('--wpm', type=float, default=WPM, help='Words per minute')
   parser.add_argument('--fs', type=float, default=FS, help='Farnsworth speed')
-  parser.add_argument('--delay', type=float, default=FS, help='Delay time between code and spoken answer')
+  parser.add_argument('--characters', type=int, default='0', help='Number of random characters in a card')
+  parser.add_argument('--limit', type=int, default='0', help='The maximum number of cards to generate')
+  parser.add_argument('--delay', type=float, default=5, help='Delay time between code and spoken answer')
   parser.add_argument('--obfuscate', action='store_true', default=False, help='Do not use message for flashcard file name')
   parser.add_argument('-p', action='store_true', default=False, help='Say letters along with morse code')
   parser.add_argument('-o', type=str, default='', help='Output to given WAV file instead of playing sound')
   parser.add_argument('-i', type=str, default='', help='Input from text file')
   args = parser.parse_args()
 
-  main(args.f, args.wpm, args.fs, args.delay, args.obfuscate, args.p, args.o, args.i)
+  main(args.f, args.wpm, args.fs, args.characters, args.limit, args.delay, args.obfuscate, args.p, args.o, args.i)
 

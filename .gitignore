@@ -1,5 +1,7 @@
 __pycache__
 *.pyc
+*.mp3
+*.wav
 .DS_Store
 /audio/letter-names
 /output

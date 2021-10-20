@@ -11,6 +11,7 @@ def letterToMorse(letter):
     return ' '
   else:
     return ''
+
 def stringToMorse(string):
   codeArr = [letterToMorse(l) for l in string.upper()]
   trimmedArr = [code for code in codeArr if code]

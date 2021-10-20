@@ -39,25 +39,36 @@ def main(freq, wpm, fs, limit, sign_type, us_origin, repeat, prompt, outFile):
 
   messages = []
 
-  if type == '':
-    prefix_character_count = random.choice([1, 3])
-    suffix_character_count = random.choice([0, 3])
-  else:
-    prefix_character_count = int(sign_type[0])
-    suffix_character_count = int(sign_type[-1]) - 1
-    print("Generating " + str(prefix_character_count) + 'x' + str(suffix_character_count + 1) + ' call signs.')
-
   for i in range(0, limit):
+
+    if sign_type == '':
+      prefix_character_count = random.choice([1, 3])
+      suffix_character_count = random.choice([0, 2])
+    else:
+      prefix_character_count = int(sign_type[0])
+      suffix_character_count = int(sign_type[-1]) - 1
+      print("Generating " + str(prefix_character_count) + 'x' + str(suffix_character_count + 1) + ' call signs.')
 
     if us_origin:
       if prefix_character_count == 1:
+        region = ''.join(random.choice(string.digits + ['10']))
         prefix = ''.join(random.choice(['K', 'N', 'W']))
       else:
-        prefix = ''.join(random.choice(['A', 'K', 'N', 'W']) + random.choice(list(string.ascii_uppercase)))
+        region = ''.join(random.choice(string.digits + ['11', '12', '13']))
+        if region == '11':
+          prefix = ''.join(random.choice(['AL', 'KL', 'NL', 'WL']))
+        elif region == '12':
+          prefix = ''.join(random.choice(['KP', 'NP', 'WP']))
+        elif region == '13':
+          prefix = ''.join(random.choice(['AH', 'KH', 'NH', 'WH']))
+        else:
+          prefix = ''.join(random.choice(['A', 'K', 'N', 'W']) + random.choice(list(string.ascii_uppercase).remove(['L', 'P', 'H']))
       suffix = ''.join(random.choices(list(string.ascii_uppercase), k = suffix_character_count+1))
     else:
       prefix = ''.join(random.choices(list(string.ascii_uppercase + string.digits), k = prefix_character_count))
       suffix = ''.join(random.choices(list(string.ascii_uppercase + string.digits), k = suffix_character_count)) +  random.choice(list(string.ascii_uppercase))
+
+    print(str(suffix_character_count) + ':' + suffix)
 
     messages.append(prefix + random.choice(list(string.digits)) + suffix)
 
