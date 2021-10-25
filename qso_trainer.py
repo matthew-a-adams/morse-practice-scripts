@@ -161,7 +161,7 @@ def main(freq, wpm, fs, force, outFile, inFile):
   playAndCheckMessage(random.choice(['THX ', 'THANKS ']) + random.choice(['FOR ', 'FER ', '']) + 'INFO BT',  sps, wpm, fs, freq)
 
   # Rig info
-  playAndCheckMessage('RIG ' + random.choice(['HERE ', 'HR ', ''])  + 'IS ' + callee.rig + ' AT ' + callee.pwr + 'W BT', sps, wpm, fs, freq)
+  playAndCheckMessage('RIG ' + random.choice(['HERE ', 'HR ', ''])  + 'IS ' + callee.rig + ' AT ' + callee.pwr + ' BT', sps, wpm, fs, freq)
 
   # Antenna
   playAndCheckMessage('ANT IS ' + callee.ant + ' BT', sps, wpm, fs, freq)
@@ -273,7 +273,7 @@ def loadLetterNames(pathTemplate='audio/letter-names/%s_.wav', letters=LETTERS):
     out[letter] = loadWav(fName)
   return out
 def loadWav(fName):
-  rate, data = io.wavfile.read(fName, mmap=True)
+  rate, data = io.wavfile.getHistory(fName, mmap=True)
   dataScale = data.astype(np.float32) / maxDtypeVolume(data.dtype)
   return rate, dataScale
 def maxDtypeVolume(dtype):

@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
 from __future__ import division, print_function
-import string, time, random, msvcrt
+import string, time, random, msvcrt, itertools
 import sounddevice as sd
 import numpy as np
 from scipy import io
 import scipy.io.wavfile
 
 import morse
+import morseStatistics as ms
 
 SPS = 8000
 LETTERS = string.ascii_uppercase
@@ -16,32 +17,6 @@ WPM = 25
 FS = 10
 AUDIO_PADDING = 0.5  # Seconds
 CLICK_SMOOTH = 2  # Tone periods
-
-class CharacterStatistics:
-
-  def __init__(self, char):
-    self.count  = 0
-    self.average = 0
-
-class Statistics:
-
-  def __init__(self, characters):
-    self.count = {}
-    self.average = {}
-    for session in characters:
-      for character  in session:
-        self.count[character] = 0
-        self.average[character] = float(0)
-
-  def update(self, character, time):
-    self.count[character] = self.count[character] + 1
-    self.average[character] = float(self.average[character] + time) / float(self.count[character])
-
-  def show(self):
-    print('Response times:\n')
-    for char, ave in sorted(self.average.items(), key=lambda item: item[1], reverse=True):
-      if self.count[char] > 0:
-        print('  ' + char + ' [', '{:.2f}'.format(ave), 's]')
 
 SESSIONS = [
               ['E', 'T', 'A', 'N'],             # Session 1
@@ -56,9 +31,9 @@ SESSIONS = [
               ['X', 'Q', 'Z']                   # Session 10
 ]
 
-STATS = Statistics(SESSIONS)
+STATS = ms.CharacterStatistics()
 
-def main(freq, wpm, fs, time_limit, quick, session, prompt, outFile):
+def main(freq, wpm, fs, limit, time_limit, quick, session, multiple, prompt, outFile):
 
   if prompt:
     # Load spoken letter WAV files
@@ -90,7 +65,7 @@ def main(freq, wpm, fs, time_limit, quick, session, prompt, outFile):
     for set in range(0, session_sets, 1):
       messages = messages + SESSIONS[set]
 
-    testMessages(messages, time_limit, sps, wpm, fs, freq)
+    testMessages(messages, limit, time_limit, multiple, sps, wpm, fs, freq)
 
   else:
     for group_end in range(session_sets-1, -1, -1):
@@ -102,13 +77,32 @@ def main(freq, wpm, fs, time_limit, quick, session, prompt, outFile):
       for set in sets:
         messages = messages + SESSIONS[set - 1]
 
-      testMessages(messages, time_limit, sps, wpm, fs, freq)
+      testMessages(messages, limit, time_limit, multiple, sps, wpm, fs, freq)
 
   STATS.show()
 
-def testMessages(messages, time_limit, sps, wpm, fs, freq):
+  STATS.update()
+
+def testMessages(messages, limit, time_limit, multiple, sps, wpm, fs, freq):
 
   random.shuffle(messages)
+
+  if multiple > 1:
+    multiple_messages = list(itertools.combinations(messages, multiple))
+
+    messages = []
+    for combo in multiple_messages:
+      message = ''.join(combo)
+      messages.append(message)
+
+    if limit  > 0:
+      messages = random.choices(messages, k=limit)
+    else:
+      messages = messages
+
+    print(messages)
+    print('...messages to decipher.')
+
 
   # Keep track of failed messages and retest until all have been correctly tested.
   continue_with_test = True
@@ -144,7 +138,7 @@ def testMessages(messages, time_limit, sps, wpm, fs, freq):
         #input()
       elif match:
         print('Correct! [', '{:.2f}'.format(response_time), 's]')
-        STATS.update(chr(ord(check)).upper(), response_time)
+        STATS.recordTime(chr(ord(check)).upper(), response_time)
       else:
         print('Wrong. The correct answer is ', chr(ord(message)))
         retest_messages.append(message)
@@ -218,7 +212,7 @@ def loadLetterNames(pathTemplate='audio/letter-names/%s_.wav', letters=LETTERS):
     out[letter] = loadWav(fName)
   return out
 def loadWav(fName):
-  rate, data = io.wavfile.read(fName, mmap=True)
+  rate, data = io.wavfile.getHistory(fName, mmap=True)
   dataScale = data.astype(np.float32) / maxDtypeVolume(data.dtype)
   return rate, dataScale
 def maxDtypeVolume(dtype):
@@ -253,12 +247,14 @@ if __name__ == '__main__':
   parser.add_argument('-f', type=float, default=FREQ, help='Tone frequency')
   parser.add_argument('--wpm', type=float, default=WPM, help='Words per minute')
   parser.add_argument('--fs', type=float, default=FS, help='Farnsworth speed')
+  parser.add_argument('--limit', type=int, default=0, help='Limit to X queries')
   parser.add_argument('--tl', type=float, default=0.0, help='Time limit (in seconds) before moving on the next character')
   parser.add_argument('--quick', action='store_true', default=False, help='Short test (once through each letter)')
   parser.add_argument('--session', type=int, default=0, help='CWA test session charcter set')
+  parser.add_argument('--multiple', type=int, default=1, help='Number of random characters in a row (default = 1)')
   parser.add_argument('-p', action='store_true', default=False, help='Say letters along with morse code')
   parser.add_argument('-o', type=str, default='', help='Output to given WAV file instead of playing sound')
   args = parser.parse_args()
 
-  main(args.f, args.wpm, args.fs, args.tl, args.quick, args.session, args.p, args.o)
+  main(args.f, args.wpm, args.fs, args.limit, args.tl, args.quick, args.session, args.multiple, args.p, args.o)
 

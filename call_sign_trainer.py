@@ -42,35 +42,40 @@ def main(freq, wpm, fs, limit, sign_type, us_origin, repeat, prompt, outFile):
   for i in range(0, limit):
 
     if sign_type == '':
-      prefix_character_count = random.choice([1, 3])
-      suffix_character_count = random.choice([0, 2])
+      prefix_character_count = random.choice([1, 2])
+      suffix_character_count = random.choice([1, 3])
     else:
       prefix_character_count = int(sign_type[0])
-      suffix_character_count = int(sign_type[-1]) - 1
-      print("Generating " + str(prefix_character_count) + 'x' + str(suffix_character_count + 1) + ' call signs.')
+      suffix_character_count = int(sign_type[-1])
+      print("Generating " + str(prefix_character_count) + 'x' + str(suffix_character_count) + ' call signs.')
 
     if us_origin:
       if prefix_character_count == 1:
-        region = ''.join(random.choice(string.digits + ['10']))
-        prefix = ''.join(random.choice(['K', 'N', 'W']))
+        region = random.choice(list(string.digits) + ['10'])
+        prefix = random.choice(['K', 'N', 'W'])
       else:
-        region = ''.join(random.choice(string.digits + ['11', '12', '13']))
+        region = random.choice(list(string.digits) + ['11', '12', '13'])
         if region == '11':
-          prefix = ''.join(random.choice(['AL', 'KL', 'NL', 'WL']))
+          prefix = random.choice(['AL', 'KL', 'NL', 'WL'])
         elif region == '12':
-          prefix = ''.join(random.choice(['KP', 'NP', 'WP']))
+          prefix= random.choice(['KP', 'NP', 'WP'])
         elif region == '13':
-          prefix = ''.join(random.choice(['AH', 'KH', 'NH', 'WH']))
+          prefix = random.choice(['AH', 'KH', 'NH', 'WH'])
         else:
-          prefix = ''.join(random.choice(['A', 'K', 'N', 'W']) + random.choice(list(string.ascii_uppercase).remove(['L', 'P', 'H']))
-      suffix = ''.join(random.choices(list(string.ascii_uppercase), k = suffix_character_count+1))
+          prefix = random.choice(['A', 'K', 'N', 'W'])
+          if prefix == 'A':
+            set = list(map(chr, range(ord('A'), ord('L')+1)))
+          else:
+            set = list(string.ascii_uppercase)
+          set = [e for e in set if e not in ['L', 'P', 'H']]
+          prefix =  prefix +  random.choice(set)
+      suffix = ''.join(random.choices(list(string.ascii_uppercase), k = suffix_character_count))
     else:
-      prefix = ''.join(random.choices(list(string.ascii_uppercase + string.digits), k = prefix_character_count))
-      suffix = ''.join(random.choices(list(string.ascii_uppercase + string.digits), k = suffix_character_count)) +  random.choice(list(string.ascii_uppercase))
+      prefix = ''.join(random.choices(string.ascii_uppercase + string.digits, k = prefix_character_count))
+      region =  random.choice(string.digits)
+      suffix = ''.join(random.choices(string.ascii_uppercase + string.digit), k = suffix_character_count) +  random.choice(string.ascii_uppercase)
 
-    print(str(suffix_character_count) + ':' + suffix)
-
-    messages.append(prefix + random.choice(list(string.digits)) + suffix)
+    messages.append(str(prefix) + str(region) + str(suffix))
 
   testMessages(messages, repeat, sps, wpm, fs, freq)
 
@@ -175,7 +180,7 @@ def loadLetterNames(pathTemplate='audio/letter-names/%s_.wav', letters=LETTERS):
     out[letter] = loadWav(fName)
   return out
 def loadWav(fName):
-  rate, data = io.wavfile.read(fName, mmap=True)
+  rate, data = io.wavfile.getHistory(fName, mmap=True)
   dataScale = data.astype(np.float32) / maxDtypeVolume(data.dtype)
   return rate, dataScale
 def maxDtypeVolume(dtype):
