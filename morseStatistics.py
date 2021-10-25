@@ -2,7 +2,6 @@ import os.path
 import numpy as np
 import pandas as pd
 
-
 class CharacterStatistics:
 
     characters = pd.DataFrame()
@@ -52,6 +51,8 @@ class CharacterStatistics:
             df[2] = np.where(df[0] <= df[1], '\u2193', '\u2191')
 
             df = df.rename(columns={0 : 'Current', 1 : 'Average', 2 : ''})
+
+        #df.iloc[1].plot.bar()
 
         print(df.to_string())
 

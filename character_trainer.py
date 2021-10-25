@@ -100,10 +100,6 @@ def testMessages(messages, limit, time_limit, multiple, sps, wpm, fs, freq):
     else:
       messages = messages
 
-    print(messages)
-    print('...messages to decipher.')
-
-
   # Keep track of failed messages and retest until all have been correctly tested.
   continue_with_test = True
 
