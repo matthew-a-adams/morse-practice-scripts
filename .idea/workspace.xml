@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="3bbc4e6f-5141-4432-9df9-3f3a9b74bbe4" name="Changes" comment="updated statistics.csv">
-      <change afterPath="$PROJECT_DIR$/recorder.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/word_record.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/word_recorder.bat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/word_recorder_2.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/morse-practice-scripts.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/morse-practice-scripts.iml" afterDir="false" />
+    <list default="true" id="3bbc4e6f-5141-4432-9df9-3f3a9b74bbe4" name="Changes" comment="gui and recording work">
+      <change afterPath="$PROJECT_DIR$/speech_recognizer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/statistics.csv" beforeDir="false" afterPath="$PROJECT_DIR$/statistics.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/word_record.py" beforeDir="false" afterPath="$PROJECT_DIR$/word_record.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/word_recorder.bat" beforeDir="false" afterPath="$PROJECT_DIR$/word_recorder.bat" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -175,7 +173,21 @@
       <option name="project" value="LOCAL" />
       <updated>1635186243743</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="audio recording work">
+      <created>1637672702540</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1637672702540</updated>
+    </task>
+    <task id="LOCAL-00010" summary="gui and recording work">
+      <created>1637672784605</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1637672784605</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -201,7 +213,9 @@
     <MESSAGE value="updated batch files" />
     <MESSAGE value="Updates to character_trainer statistic reporting and collection" />
     <MESSAGE value="added statistics.csv" />
-    <option name="LAST_COMMIT_MESSAGE" value="added statistics.csv" />
+    <MESSAGE value="audio recording work" />
+    <MESSAGE value="gui and recording work" />
+    <option name="LAST_COMMIT_MESSAGE" value="gui and recording work" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

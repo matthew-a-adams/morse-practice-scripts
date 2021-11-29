@@ -10,8 +10,10 @@ from scipy import io
 import scipy.io.wavfile
 import csv
 from collections import Counter
-
+import os
+import speech_recognition as sr
 import morse
+import msvcrt
 
 SPS = 8000
 LETTERS = string.ascii_uppercase
@@ -61,18 +63,27 @@ def main(freq, wpm, fs, prompt, force, limit, length, outFile, inFile):
       # Compute morse code audio from plain text
       playMessage(message, sps, wpm, fs, freq)
 
-      print('Enter message:')
-      start = time.time()
-      check = input()
-
+      check = recognizeRecording()
+      # Print the message for verification
       if check.upper() == message.upper():
-        end = time.time()
-        print('Correct! [', '{:.2f}'.format(end-start), 's]')
+        print('Correct! Recognized: ' + check)
       else:
-        print('Wrong. The correct answer is ', message)
-        retest_messages.append(message)
-        continue_with_test = True
-        missed_count = missed_count + 1
+        if check == '-':
+          print('I could not recognize the audio.')
+        else:
+          print('The correct answer is ' + message + '.  I heard ' + check + '.')
+
+        # Play the user recording for verification
+        playRecording()
+
+        # Confirm answer
+        print('Was your answer correct? (Y/N)')
+        if  ord(msvcrt.getch()) == ord('n'):
+          retest_messages.append(message)
+          continue_with_test = True
+          missed_count = missed_count + 1
+
+
 
     print('You missed ', missed_count, '. ')
 
@@ -115,14 +126,48 @@ def playMessage(message, sps, wpm, fs, freq):
   in_data, mw = sf.read('message.wav')
   sd.wait()
 
-  print("GO!")
-
   # Start recording (wave_length Record for seconds. Wait until the recording is finished with wait)
   data = sd.playrec(in_data, mw, channels=1)
   sd.wait()
 
+  if os.path.isfile('record.wav'):
+    os.remove('record.wav')
+
   data /= 2
   io.wavfile.write('record.wav', sps, (data * 2 ** 15).astype(np.int16))
+
+def recognizeRecording():
+  r = sr.Recognizer()
+
+  spelling = sr.AudioFile('record.wav')
+  with spelling as source:
+    audio = r.record(source)
+
+  text = '-'
+
+  try:
+    text = r.recognize_google(audio)
+  except sr.RequestError:
+    # API was unreachable or unresponsive
+    print('API unavailable')
+  except sr.UnknownValueError:
+  # speech was unintelligible
+    print('Unable to recognize speech')
+
+  text = text.upper()
+  text = text.replace(" ", "")
+
+  return text
+
+def playRecording():
+
+  # Read the hi.wav file
+  in_data, mw = sf.read('record.wav')
+  sd.wait()
+
+  # Play the user recording
+  data = sd.play(in_data, mw)
+  sd.wait()
 
 def addAudio(base, new, offset):
   if base is None:
