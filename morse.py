@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 
+import msvcrt, os, random, string, time
+
 import numpy as np
+import pandas as pd
+import sounddevice as sd
+import soundfile as sf
+
+from scipy import io
 
 from morseTable import forwardTable, DOT, DASH, DASH_WIDTH, CHAR_SPACE, WORD_SPACE
 
@@ -96,6 +103,7 @@ def wpmToDps(wpm):
   ''' Words per minute = number of times PARIS can be sent per minute.
       PARIS takes 50 dot lengths to send.  Returns dots per seconds. '''
   return wpm*50/60.0
+
 def farnsworthScaleFactor(wpm, fs=None):
   ''' Returns the multiple that character and word spacing should be multiplied by. '''
   if fs is None:
@@ -126,3 +134,257 @@ if __name__ == '__main__':
     except EOFError:
       pass
 
+class audio:
+
+  sps = 8000
+  letters = string.ascii_uppercase
+  freq = 750
+  wpm = 25
+  fs = 10
+  audio_padding = 0.5  # Seconds
+  click_smooth = 2  # Tone periods
+
+  word_space = 0.5 # Seconds
+
+  entry = 1
+
+  def __init__(self, freq = 750, wpm = 25, fs = 10):
+    self.freq = freq
+    self.wpm = wpm
+    self.fs = fs
+
+    print('Audio samples per second =', self.sps)
+    print('Tone period     =', round(1000 / self.freq, 1), 'ms')
+
+    dps = wpmToDps(self.wpm)  # Dots per second
+    mspd = 1000 / dps  # Dot duration in milliseconds
+    farnsworthScale = farnsworthScaleFactor(self.wpm)
+    print('Dot width       =', round(mspd, 1), 'ms')
+    print('Dash width      =', int(round(mspd * DASH_WIDTH)), 'ms')
+    print('Character space =', int(round(mspd * CHAR_SPACE * farnsworthScale)), 'ms')
+
+    self.word_space = int(round(mspd * WORD_SPACE * farnsworthScale/4))
+    print('Word space      =', self.word_space, 'ms (', float(self.word_space/1000), 's)')
+
+  def play(self, message, recordMic = False):
+
+    # Add padding to record audio
+    if recordMic:
+      message = message + ' '
+
+    # Compute morse code audio from plain text
+    audio = self.stringToMorseAudio(message, 0.5)
+    audio /= 2
+
+    if recordMic:
+      self.playAndRecordBlock(audio)
+    else:
+      self.playBlock(audio)
+    time.sleep(0.1)
+
+  def space(self):
+    time.sleep(float(self.word_space/1000))
+
+  def addAudio(self, base, new, offset):
+    if base is None:
+      base = np.array([], dtype=np.float32)
+    assert offset >= 0
+    lenBase, lenNew = len(base), len(new)
+    if offset+lenNew > lenBase:
+      # Make base longer by padding with zeros
+      base = np.append(base, np.zeros(offset+lenNew-lenBase))
+    base[offset:offset+lenNew] += new
+    return base
+
+  def boolArrToSwitchedTone(self, boolArr, volume=1.0):
+    ''' Create the tone audio from a bool array representation of morse code. '''
+    weightLen = int(self.click_smooth*self.sps/self.freq)
+    if weightLen % 2 == 0:
+      weightLen += 1  # Make sure the weight array is odd length
+    smoothingWeights = np.concatenate((np.arange(1, weightLen//2+1), np.arange(weightLen//2+1, 0, -1)))
+    smoothingWeights = smoothingWeights / np.sum(smoothingWeights)
+    numSamplesPadding = int(self.sps*self.audio_padding) + int((weightLen-1)/2)
+    padding = np.zeros(numSamplesPadding, dtype=bool)
+    boolArr = np.concatenate((padding, boolArr, padding)).astype(np.float32)
+    if self.click_smooth <= 0:
+      smoothBoolArr = boolArr
+    else:
+      smoothBoolArr = np.correlate(boolArr, smoothingWeights, 'valid')
+    numSamples = len(smoothBoolArr)
+    x = np.arange(numSamples)
+    toneArr = np.sin(x * (self.freq*2*np.pi/self.sps)) * volume
+    toneArr *= smoothBoolArr
+    return toneArr
+
+  def stringToMorseAudio(self, message, volume=1.0, letterPrompts=None, promptVolume=1.0):
+    message = message.upper()
+    code = stringToMorse(message)
+    boolArr = morseToBoolArr(code, self.sps, self.wpm, self.fs)
+    audio = self.boolArrToSwitchedTone(boolArr, volume)
+    numSamplesPadding = int(self.sps*self.audio_padding)
+    if letterPrompts is not None:
+      for i in range(len(message)):
+        l = message[i]
+        if l in letterPrompts:
+          offsetPlus = morseSampleDuration(stringToMorse(message[:i+1]), self.sps, self.wpm, self.fs)
+          letterDuration = morseSampleDuration(letterToMorse(message[i]), self.sps, self.wpm, self.fs)
+          offset = numSamplesPadding + offsetPlus - letterDuration
+          audio = self.addAudio(audio, letterPrompts[l][1]*promptVolume, offset)
+    return audio
+
+  def genTone(self, frequency, duration, volume=1.0):
+    return np.sin(np.arange(self.sps*duration)*(frequency*2*np.pi/self.sps))*volume
+
+  def playTone(self, *args, **kwargs):
+    play(self.genTone(*args, **kwargs))
+
+  def waitFor(self, array):
+    duration = len(array) / self.sps
+    time.sleep(duration)
+
+  def playBlock(self, array):
+    sd.play(array.astype(np.float32), self.sps)
+    self.waitFor(array)
+
+  def playAndRecordBlock(self, audio):
+    io.wavfile.write('audio.wav', self.sps, (audio * 2 ** 15).astype(np.int16))
+
+    in_data, mw = sf.read('audio.wav')
+    sd.wait()
+
+    # Start recording (wave_length Record for seconds. Wait until the recording is finished with wait)
+    data = sd.playrec(in_data, mw, channels=1)
+    sd.wait()
+
+    recording = str(self.entry) + '.wav'
+
+    if os.path.isfile(recording):
+      os.remove(recording)
+
+    data /= 2
+    io.wavfile.write(recording, self.sps, (data * 2 ** 15).astype(np.int16))
+
+    self.entry = self.entry + 1
+
+class message:
+
+  alphabet = []
+
+  numberOfWords = 1
+  numberOfCharacters = 1
+
+  def __init__(self, charactersPerWord=1, wordsPerPhrase=1, alphabet=list(string.ascii_uppercase)):
+
+    self.alphabet = alphabet
+    self.numberOfWords = wordsPerPhrase
+    self.numberOfCharacters = charactersPerWord
+
+  def generateCharacter(self):
+    return random.choices(self.alphabet, k=1)
+
+  def generateWord(self, dictionary=[]):
+
+    word = []
+
+    for character in range(0, self.numberOfCharacters, 1):
+      word = word + self.generateCharacter()
+
+    return word
+
+  def generate(self):
+
+    phrase = []
+
+    for word in range(0, self.numberOfWords, 1):
+      phrase = phrase + self.generateWord()
+
+      if word < (self.numberOfWords - 1):
+        phrase = phrase + list(' ')
+
+    return phrase
+
+class grader:
+
+  record = pd.DataFrame()
+
+  def __init__(self):
+    if os.path.isfile('record.csv'):
+      self.record = pd.read_csv('record.csv')
+
+    else:
+      self.record['character'] = (list(string.ascii_uppercase))
+      self.record['pass'] = 0
+      self.record['fail'] = 0
+
+
+  def checkAudio(self, message):
+
+    entry = 1
+
+    for character in message:
+
+      if character == ' ':
+        entry = entry + 1
+        continue
+
+      print('The character is ', character, '. Does this match your recording? [y/n]')
+
+      recording = str(entry) + '.wav'
+      in_data, mw = sf.read(recording)
+      sd.wait()
+
+      data = sd.play(in_data, mw)
+      sd.wait()
+
+      check = input()
+
+      index = self.record.index[self.record['character'] == character][0]
+
+      if check == 'y':
+        print('Great!')
+        self.record.at[index, 'pass'] = self.record.at[index, 'pass'] + 1
+      else:
+        print('Too bad.')
+        self.record.at[index, 'fail'] = self.record.at[index, 'fail'] + 1
+
+      os.remove(recording)
+
+      entry = entry + 1
+
+    print(self.record)
+    self.record.to_csv('record.csv', index=False)
+
+class alphabet:
+
+    set = []
+
+    characters = [
+        ['E', 'T', 'A', 'N'],               # Session 1
+        ['O', 'S', 'I', '1', '4'],          # Session 2
+        ['R', 'H', 'D', 'L', '2', '5'],     # Session 3
+        ['U', 'C', '.'],                    # Session 4
+        ['M', 'W', '3', '6', '?'],          # Session 5
+        ['F', 'Y', ','],                    # Session 6
+        ['P', 'G', '7', '9', '/'],          # Session 7
+        ['B', 'V', '='],                    # Session 8
+        ['K', 'J', '8', '0'],               # Session 9
+        ['X', 'Q', 'Z']                     # Session 10
+    ]
+
+    def __init__(self, lessons = [], letters = True, numbers = True, punctuation = True):
+
+        if lessons:
+            for lesson in lessons:
+                self.set = self.set + self.characters[lesson]
+        else:
+            for lesson in range(0, len(self.characters), 1):
+                self.set = self.set + self.characters[lesson]
+
+    def __getitem__(self, key):
+        return self.set[key]
+
+    def __iter__(self):
+        return self.set
+
+    def array(self):
+        return self.set

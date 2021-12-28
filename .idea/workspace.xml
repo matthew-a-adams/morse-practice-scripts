@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="3bbc4e6f-5141-4432-9df9-3f3a9b74bbe4" name="Changes" comment="gui and recording work">
-      <change afterPath="$PROJECT_DIR$/speech_recognizer.py" afterDir="false" />
+    <list default="true" id="3bbc4e6f-5141-4432-9df9-3f3a9b74bbe4" name="Changes" comment="speech recognition practice software">
+      <change afterPath="$PROJECT_DIR$/alphabet_tools.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/message_generator.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/play_message.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/study.bat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/study.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test_generator.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/morse.py" beforeDir="false" afterPath="$PROJECT_DIR$/morse.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/statistics.csv" beforeDir="false" afterPath="$PROJECT_DIR$/statistics.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/word_record.py" beforeDir="false" afterPath="$PROJECT_DIR$/word_record.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/word_recorder.bat" beforeDir="false" afterPath="$PROJECT_DIR$/word_recorder.bat" afterDir="false" />
@@ -27,6 +33,14 @@
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
   </component>
   <component name="GithubPullRequestsUISettings">
     <option name="selectedUrlAndAccountId">
@@ -60,7 +74,7 @@
       <recent name="C:\Users\Matthew Adams\PycharmProjects\morse-practice-scripts\cwops" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.word_recorder">
+  <component name="RunManager" selected="Python.study">
     <configuration name="statistics_trial" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="morse-practice-scripts" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -75,6 +89,27 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/statistics_trial.py" />
       <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="study" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="morse-practice-scripts" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/study.py" />
+      <option name="PARAMETERS" value="--wpm 25 --fs 8 --characters 9 --words 9" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -106,7 +141,13 @@
     <list>
       <item itemvalue="Python.statistics_trial" />
       <item itemvalue="Python.word_recorder" />
+      <item itemvalue="Python.study" />
     </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.study" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -187,7 +228,14 @@
       <option name="project" value="LOCAL" />
       <updated>1637672784605</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="speech recognition practice software">
+      <created>1638205615080</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1638205615080</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -215,10 +263,23 @@
     <MESSAGE value="added statistics.csv" />
     <MESSAGE value="audio recording work" />
     <MESSAGE value="gui and recording work" />
-    <option name="LAST_COMMIT_MESSAGE" value="gui and recording work" />
+    <MESSAGE value="speech recognition practice software" />
+    <option name="LAST_COMMIT_MESSAGE" value="speech recognition practice software" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/test_generator.py</url>
+          <line>12</line>
+          <option name="timeStamp" value="12" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/play_message.py</url>
+          <line>3</line>
+          <option name="timeStamp" value="13" />
+        </line-breakpoint>
+      </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
           <properties notifyOnTerminate="true" exception="BaseException">

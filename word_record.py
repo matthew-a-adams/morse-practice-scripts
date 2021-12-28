@@ -23,9 +23,9 @@ FS = 10
 AUDIO_PADDING = 0.5  # Seconds
 CLICK_SMOOTH = 2  # Tone periods
 
-def main(freq, wpm, fs, prompt, force, limit, length, outFile, inFile):
+def main(freq, wpm, fs, prompt, force, phrases, time_out, length, outFile, inFile):
 
-  messages = wordFinder(limit, length)
+  messages = wordFinder(phrases, length)
 
   print('Message =', messages)
 
@@ -52,6 +52,8 @@ def main(freq, wpm, fs, prompt, force, limit, length, outFile, inFile):
 
   continue_with_test = True
 
+  start_time = time.time()
+
   while continue_with_test:
 
     missed_count = 0
@@ -69,12 +71,14 @@ def main(freq, wpm, fs, prompt, force, limit, length, outFile, inFile):
         print('Correct! Recognized: ' + check)
       else:
         if check == '-':
-          print('I could not recognize the audio.')
+          print('The correct answer is ' + message)
         else:
           print('The correct answer is ' + message + '.  I heard ' + check + '.')
 
         # Play the user recording for verification
-        playRecording()
+        print('Do you want me to play you recording? (Y/N)')
+        if ord(msvcrt.getch()) == ord('y'):
+          playRecording()
 
         # Confirm answer
         print('Was your answer correct? (Y/N)')
@@ -83,15 +87,17 @@ def main(freq, wpm, fs, prompt, force, limit, length, outFile, inFile):
           continue_with_test = True
           missed_count = missed_count + 1
 
-
+      if (time_out > 0) & ((time.time() - start_time) > time_out):
+        print ("Times up!")
+        exit()
 
     print('You missed ', missed_count, '. ')
 
     if force:
       print('Retesting missed message...')
       message = retest_messages
-    else:
-      continue_with_test = False
+    elif time_out > 0:
+        messages = wordFinder(phrases, length)
 
 def wordFinder(limit, length):
 
@@ -149,10 +155,10 @@ def recognizeRecording():
     text = r.recognize_google(audio)
   except sr.RequestError:
     # API was unreachable or unresponsive
-    print('API unavailable')
+    print('API unavailable.')
   except sr.UnknownValueError:
   # speech was unintelligible
-    print('Unable to recognize speech')
+    print('Unable to recognize speech.')
 
   text = text.upper()
   text = text.replace(" ", "")
@@ -278,11 +284,12 @@ if __name__ == '__main__':
   parser.add_argument('--fs', type=float, default=FS, help='Farnsworth speed')
   parser.add_argument('-p', action='store_true', default=False, help='Say letters along with morse code')
   parser.add_argument('--force', action='store_true', default=False, help='Force user to get the answer correct before completing')
-  parser.add_argument('--limit', type=int, default=0, help='Limit to X queries')
+  parser.add_argument('--phrases', type=int, default=10, help='Limit to as many phrases')
+  parser.add_argument('--time', type=int, default=0, help='Limit practice time to as many seconds')
   parser.add_argument('--length', type=int, default=0, help='Length of the word')
   parser.add_argument('-o', type=str, default='', help='Output to given WAV file instead of playing sound')
   parser.add_argument('-i', type=str, default='', help='Input from text file')
   args = parser.parse_args()
 
-  main(args.f, args.wpm, args.fs, args.p, args.force, args.limit, args.length, args.o, args.i)
+  main(args.f, args.wpm, args.fs, args.p, args.force, args.phrases, args.time, args.length, args.o, args.i)
 
