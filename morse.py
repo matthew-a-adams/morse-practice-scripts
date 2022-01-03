@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import msvcrt, os, random, string, time
+import os, random, string, time
 
 import numpy as np
 import pandas as pd
@@ -10,6 +10,8 @@ import soundfile as sf
 from scipy import io
 
 from morseTable import forwardTable, DOT, DASH, DASH_WIDTH, CHAR_SPACE, WORD_SPACE
+
+import gui
 
 def letterToMorse(letter):
   if letter in forwardTable:
@@ -180,7 +182,6 @@ class audio:
       self.playAndRecordBlock(audio)
     else:
       self.playBlock(audio)
-    time.sleep(0.1)
 
   def space(self):
     time.sleep(float(self.word_space/1000))
@@ -285,21 +286,25 @@ class message:
   def generateWord(self, dictionary=[]):
 
     word = []
+    word_str = ''
 
     for character in range(0, self.numberOfCharacters, 1):
-      word = word + self.generateCharacter()
+      word += self.generateCharacter()
 
-    return word
+    return word_str.join(word)
 
   def generate(self):
 
     phrase = []
 
     for word in range(0, self.numberOfWords, 1):
-      phrase = phrase + self.generateWord()
+      phrase .append(self.generateWord())
 
-      if word < (self.numberOfWords - 1):
-        phrase = phrase + list(' ')
+#   for word in range(0, self.numberOfWords, 1):
+#      phrase = phrase + self.generateWord()
+#
+#      if word < (self.numberOfWords - 1):
+#        phrase = phrase + list(' ')
 
     return phrase
 
@@ -316,8 +321,7 @@ class grader:
       self.record['pass'] = 0
       self.record['fail'] = 0
 
-
-  def checkAudio(self, message):
+  def checkCharacterAudio(self, message):
 
     entry = 1
 
@@ -352,6 +356,36 @@ class grader:
       entry = entry + 1
 
     print(self.record)
+    self.record.to_csv('record.csv', index=False)
+
+  def checkPhraseAudio(self, message):
+
+    entry = 1
+
+    for word in message:
+
+      #print('The word is ', word, '. Type in the letters you recorded. Leave a space if the letter was not said.')
+
+      test = gui.window(word, entry)
+      test.mainloop()
+
+      results = test.getResults()
+
+      for character in results:
+
+        index = self.record.index[self.record['character'] == character][0]
+
+        #print('\t\'', character, '\' is ', end='')
+
+        if results[character].get() == 1:
+          #print('CORRECT')
+          self.record.at[index, 'pass'] = self.record.at[index, 'pass'] + 1
+        else:
+          #print('INCORRECT')
+          self.record.at[index, 'fail'] = self.record.at[index, 'fail'] + 1
+
+      entry = entry + 1
+
     self.record.to_csv('record.csv', index=False)
 
 class alphabet:

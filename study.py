@@ -7,20 +7,24 @@ import numpy as np
 from scipy import io
 import scipy.io.wavfile
 
-import morse
+import tkinter as tk
+from tkinter import ttk
+from tkinter.messagebox import showinfo
+
+import morse, gui
 
 def main(freq, wpm, fs, charactersPerWord, wordsPerPhrase, phrasesPerSession):
 
-  sounder = morse.audio(freq, wpm, fs)
+  audio = morse.audio(freq, wpm, fs)
 
   characters = morse.message(charactersPerWord, wordsPerPhrase).generate()
 
   for character in characters:
-    sounder.play(character, recordMic = True)
+    audio.play(character, recordMic = True)
 
-  audioGrader = morse.grader()
+  grader = morse.grader()
 
-  audioGrader.checkAudio(characters)
+  grader.checkPhraseAudio(characters)
 
 if __name__ == '__main__':
   import sys, argparse
