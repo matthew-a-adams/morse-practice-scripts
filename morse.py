@@ -274,7 +274,7 @@ class message:
   numberOfWords = 1
   numberOfCharacters = 1
 
-  def __init__(self, charactersPerWord=1, wordsPerPhrase=1, alphabet=list(string.ascii_uppercase)):
+  def __init__(self, charactersPerWord=1, wordsPerPhrase=1, alphabet=list(string.digits) + list(string.ascii_uppercase) + list('.?,/')):
 
     self.alphabet = alphabet
     self.numberOfWords = wordsPerPhrase
@@ -298,13 +298,8 @@ class message:
     phrase = []
 
     for word in range(0, self.numberOfWords, 1):
-      phrase .append(self.generateWord())
+      phrase.append(self.generateWord())
 
-#   for word in range(0, self.numberOfWords, 1):
-#      phrase = phrase + self.generateWord()
-#
-#      if word < (self.numberOfWords - 1):
-#        phrase = phrase + list(' ')
 
     return phrase
 
@@ -312,14 +307,13 @@ class grader:
 
   record = pd.DataFrame()
 
-  def __init__(self):
-    if os.path.isfile('record.csv'):
-      self.record = pd.read_csv('record.csv')
+  def __init__(self, outputDirectory = 'scores'):
 
-    else:
-      self.record['character'] = (list(string.ascii_uppercase))
-      self.record['pass'] = 0
-      self.record['fail'] = 0
+    self.record['character'] = (list(string.ascii_uppercase) + list(string.digits) + list('.?,/'))
+    self.record['pass'] = 0
+    self.record['fail'] = 0
+    self.directory = outputDirectory
+
 
   def checkCharacterAudio(self, message):
 
@@ -364,8 +358,6 @@ class grader:
 
     for word in message:
 
-      #print('The word is ', word, '. Type in the letters you recorded. Leave a space if the letter was not said.')
-
       test = gui.window(word, entry)
       test.mainloop()
 
@@ -375,18 +367,20 @@ class grader:
 
         index = self.record.index[self.record['character'] == character][0]
 
-        #print('\t\'', character, '\' is ', end='')
-
         if results[character].get() == 1:
-          #print('CORRECT')
-          self.record.at[index, 'pass'] = self.record.at[index, 'pass'] + 1
+          self.record.at[index, 'pass'] += 1
         else:
-          #print('INCORRECT')
-          self.record.at[index, 'fail'] = self.record.at[index, 'fail'] + 1
+          self.record.at[index, 'fail'] += 1
 
       entry = entry + 1
 
-    self.record.to_csv('record.csv', index=False)
+    time_string = time.strftime("%Y%m%d%H%M", time.localtime())
+    filename = self.directory + '/' + time_string + '.csv'
+
+    if not os.path.isdir(self.directory):
+      os.mkdir(self.directory)
+
+    self.record.to_csv(filename, index=False)
 
 class alphabet:
 
