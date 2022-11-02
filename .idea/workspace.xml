@@ -1,25 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="3bbc4e6f-5141-4432-9df9-3f3a9b74bbe4" name="Changes" comment="study.py script for play, say and grade program status.py for graphing study.py progress">
-      <change afterPath="$PROJECT_DIR$/characters.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/deamon_dits.bat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/format.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/grade.bat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/grade.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/grader.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/morse2.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/parameters.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/speed.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/start.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/status.bat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/text.py" afterDir="false" />
+    <list default="true" id="3bbc4e6f-5141-4432-9df9-3f3a9b74bbe4" name="Changes" comment="Work on new version of listen and say program">
+      <change afterPath="$PROJECT_DIR$/cwops/Abreviations/Abreviation_" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cwops/Abreviations/flashcards.bat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cwops/CommonWords/Word_" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cwops/CommonWords/flashcards.bat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cwops/QSOWords/QSO_" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/cwops/QSOWords/flashcards.bat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/practice.bat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/qso_words.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/random_call.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/audio_flashcard_generator.py" beforeDir="false" afterPath="$PROJECT_DIR$/audio_flashcard_generator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cwops/Characters/0" beforeDir="false" afterPath="$PROJECT_DIR$/cwops/Characters/0" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cwops/Characters/flashcards.bat" beforeDir="false" afterPath="$PROJECT_DIR$/cwops/Characters/flashcards.bat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/deamon_dits.bat" beforeDir="false" afterPath="$PROJECT_DIR$/deamon_dits.bat" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/gui.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/morse.py" beforeDir="false" afterPath="$PROJECT_DIR$/morse.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/status.py" beforeDir="false" afterPath="$PROJECT_DIR$/status.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/study.bat" beforeDir="false" afterPath="$PROJECT_DIR$/study.bat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/study.py" beforeDir="false" afterPath="$PROJECT_DIR$/study.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/morse2.py" beforeDir="false" afterPath="$PROJECT_DIR$/morse2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/morseTable.py" beforeDir="false" afterPath="$PROJECT_DIR$/morseTable.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/statistics.csv" beforeDir="false" afterPath="$PROJECT_DIR$/statistics.csv" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -71,14 +72,16 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/cwops" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Matthew Adams\PycharmProjects\morse-practice-scripts\cwops" />
+      <recent name="C:\Users\Matthew Adams\PycharmProjects\morse-practice-scripts\cwops\CommonWords" />
+      <recent name="C:\Users\Matthew Adams\PycharmProjects\morse-practice-scripts\cwops\QSOWords" />
       <recent name="C:\Users\Matthew Adams\PycharmProjects\morse-practice-scripts" />
       <recent name="C:\Users\Matthew Adams\PycharmProjects\morse-practice-scripts\cwops\Session10" />
-      <recent name="C:\Users\Matthew Adams\PycharmProjects\morse-practice-scripts\cwops" />
     </key>
   </component>
   <component name="RunManager" selected="Python.tryout">
@@ -322,8 +325,18 @@
       <option name="project" value="LOCAL" />
       <updated>1641168338886</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="Work on new version of listen and say program">
+      <created>1642680395250</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1642680395251</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName="*.csv" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
@@ -352,7 +365,8 @@
     <MESSAGE value="gui and recording work" />
     <MESSAGE value="speech recognition practice software" />
     <MESSAGE value="study.py script for play, say and grade program status.py for graphing study.py progress" />
-    <option name="LAST_COMMIT_MESSAGE" value="study.py script for play, say and grade program status.py for graphing study.py progress" />
+    <MESSAGE value="Work on new version of listen and say program" />
+    <option name="LAST_COMMIT_MESSAGE" value="Work on new version of listen and say program" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -374,7 +388,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/gui.py</url>
-          <line>336</line>
+          <line>341</line>
           <option name="timeStamp" value="15" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -383,23 +397,14 @@
           <option name="timeStamp" value="19" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/grade.py</url>
-          <option name="timeStamp" value="23" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/text.py</url>
           <line>17</line>
           <option name="timeStamp" value="24" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/study.py</url>
-          <line>21</line>
-          <option name="timeStamp" value="26" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/morse2.py</url>
-          <line>428</line>
-          <option name="timeStamp" value="29" />
+          <line>41</line>
+          <option name="timeStamp" value="25" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>

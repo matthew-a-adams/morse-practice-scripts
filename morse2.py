@@ -2,12 +2,13 @@ import configparser, os, random, string, time
 
 import tkinter as tk
 from tkinter import ttk
+from tkinter import filedialog as fd
 
 import numpy as np
 import pandas as pd
 import sounddevice as sd
 import soundfile as sf
-
+import matplotlib.pyplot as plt
 from scipy import io
 import scipy.io.wavfile
 
@@ -48,10 +49,13 @@ class Parameters(tk.Tk):
             def get(self):
                 return int(self.value.get())
 
+            def set(self, value):
+                self.value.set(value)
+
         def __init__(self, container, initialWordsPerPhrase=1, initialCharactersPerWord=1):
             super().__init__(container, text='Format')
 
-            self.wordsPerPhrase = self.LabeledEntry(self, 'Words Per Phrases', 1, initialWordsPerPhrase)
+            self.wordsPerPhrase = self.LabeledEntry(self, 'Words Per Session', 1, initialWordsPerPhrase)
             self.charactersPerWord = self.LabeledEntry(self, 'Characters Per Word', 2, initialCharactersPerWord)
 
             self.pack(padx=5, pady=5, anchor='nw', fill='x')
@@ -61,9 +65,13 @@ class Parameters(tk.Tk):
 
             # entries['NumberOfPhrases']   = self.numberOfPhrases.getEntry()
             entries['WordsPerPhrase'] = self.wordsPerPhrase.get()
-            entries['CharactersPerWord'] = self.charactersPerWord.get()
+            entries['CharactersPerWord'] = self.wordsPerPhrase.get()
 
             return entries
+
+        def set(self, wordsPerPhrase, charactersPerWord):
+            self.wordsPerPhrase.set(wordsPerPhrase)
+            self.wordsPerPhrase.set(charactersPerWord)
 
     class Speed(ttk.LabelFrame):
 
@@ -76,6 +84,9 @@ class Parameters(tk.Tk):
 
             def get(self):
                 return self.value.get()
+
+            def set(self, value):
+                self.value.set(value)
 
         def __init__(self, container, initialWordsPerMinute=25, initialFarnsworthSpeed=4):
             super().__init__(container, text='Speed')
@@ -92,6 +103,10 @@ class Parameters(tk.Tk):
             entries['FarnsworthSpeed'] = self.farnsworthSpeed.get()
 
             return entries
+
+        def set(self, wordsPerMinute, farnsworthSpeed):
+            self.wordsPerMinute.set(wordsPerMinute)
+            self.farnsworthSpeed.set(farnsworthSpeed)
 
     class Characters(ttk.LabelFrame):
 
@@ -194,6 +209,43 @@ class Parameters(tk.Tk):
 
             return entries
 
+        def set(self, selectionSet):
+            self.characters.set(ALL_CHARACTERS, False)
+            self.characters.set(selectionSet)
+            self.characters.sync()
+
+    class Config(ttk.LabelFrame):
+
+        def __init__(self, container):
+
+            super().__init__(container, text='Using Last Configuration')
+
+            frame = ttk.Frame(self)
+
+            tk.Button(frame, text="Load Configuration", command=self.load).grid(row=0, column=1, padx=5, pady=5)
+            tk.Button(frame, text="Save Configuration", command=self.save).grid(row=0, column=2, padx=5, pady=5)
+
+            frame.pack(padx=5, pady=5, fill='x')
+
+            self.pack(padx=5, pady=5, anchor='nw', fill='x')
+
+        def load(self):
+            filename = fd.askopenfilename(filetypes = [('Config', '*.ini')], defaultextension = [('Config', '*.ini')])
+            self.master.load(filename)
+            self.master.set()
+
+            name = os.path.basename(filename)
+            name = os.path.splitext(name)[0]
+            self.master.configuration.configure(text = 'Using ' + name + ' Configuration')
+
+        def save(self):
+            filename = fd.asksaveasfilename(filetypes = [('Config', '*.ini')], defaultextension = [('Config', '*.ini')])
+            self.master.save(filename)
+
+            name = os.path.basename(filename)
+            name = os.path.splitext(name)[0]
+            self.master.configuration.configure(text = 'Using ' + name + ' Configuration')
+
     def __init__(self):
 
         super().__init__()
@@ -202,39 +254,51 @@ class Parameters(tk.Tk):
         self.entries = {}
 
         # Read from config file
-        config = configparser.ConfigParser()
-        config.read('practice.ini')
+        self.load('last.ini')
 
         # Create the interface
-        self.format     = self.Format(self, config['Format']['WordsPerPhrase'], config['Format']['CharactersPerWord'])
-        self.speed      = self.Speed(self, config['Speed']['WordsPerMinute'], config['Speed']['FarnsworthSpeed'])
-        self.characters = self.Characters(self, config['Characters']['Set'])
+        self.format = self.Format(self, self.config['Format']['WordsPerPhrase'], self.config['Format']['CharactersPerWord'])
+        self.speed  = self.Speed(self, self.config['Speed']['WordsPerMinute'], self.config['Speed']['FarnsworthSpeed'])
+        self.characters = self.Characters(self, self.config['Characters']['Set'])
+        self.configuration = self.Config(self)
 
         tk.Button(self, text="Start", command=self.start, padx=5, pady=5).pack()
 
         self.mainloop()
 
     def start(self):
-
-        # Pull information from the interface
-        self.entries['Format'] = self.format.get()
-        self.entries['Speed'] = self.speed.get()
-        self.entries['Characters'] = self.characters.get()
-
         # Save setting to the ini file
-        config = configparser.ConfigParser()
-
-        for type in self.entries:
-            config[type] = self.entries[type]
-
-        with open('practice.ini', 'w') as configfile:
-            config.write(configfile)
+        self.save('last.ini')
 
         # Close the interface
         self.destroy()
 
     def get(self):
         return self.entries
+
+    def set(self):
+        self.format.set(self.config['Format']['WordsPerPhrase'], self.config['Format']['CharactersPerWord'])
+        self.speed.set(self.config['Speed']['WordsPerMinute'], self.config['Speed']['FarnsworthSpeed'])
+        self.characters.set(self.config['Characters']['Set'])
+
+    def load(self, filename):
+        self.config = configparser.ConfigParser()
+        self.config.read(filename)
+
+    def save(self, filename):
+        self.config = configparser.ConfigParser()
+
+        # Pull information from the interface
+        self.entries['Format'] = self.format.get()
+        self.entries['Speed'] = self.speed.get()
+        self.entries['Characters'] = self.characters.get()
+
+        # Convert entries to config file info
+        for type in self.entries:
+            self.config[type] = self.entries[type]
+
+        with open(filename, 'w') as configfile:
+            self.config.write(configfile)
 
 class Phrase:
 
@@ -389,17 +453,139 @@ class Audio:
     in_data, mw = sf.read('audio.wav')
     sd.wait()
 
+    os.remove('audio.wav')
+
     # Start recording (wave_length Record for seconds. Wait until the recording is finished with wait)
     data = sd.playrec(in_data, mw, channels=1)
     sd.wait()
 
-    recording = message + '.wav'
+    recording = message
 
-    if os.path.isfile(recording):
-      os.remove(recording)
+    recording = recording.replace(',', 'comma')
+    recording = recording.replace('!', 'exclimation')
+    recording = recording.replace('?', 'question')
+    recording = recording.replace('=', 'equal')
+    recording = recording.replace('.', 'period')
+    recording = recording.replace('/', 'slash')
+
+    recording = recording + '.wav'
 
     data /= 2
     io.wavfile.write(recording, self.sps, (data * 2 ** 15).astype(np.int16))
+
+
+def letterToMorse(letter):
+    if letter in forwardTable:
+        return forwardTable[letter]
+    elif letter.isspace():
+        return ' '
+    else:
+        return ''
+
+
+def stringToMorse(string):
+    codeArr = [letterToMorse(l) for l in string.upper()]
+    trimmedArr = [code for code in codeArr if code]
+    return ' '.join(trimmedArr)
+
+
+def morseSampleDuration(code, sps, wpm, fs=None):
+    dps = wpmToDps(wpm)  # dots per second
+    baseSampleCount = sps / dps
+    samplesPerDot = int(round(baseSampleCount))
+    samplesPerDash = int(round(baseSampleCount * DASH_WIDTH))
+    samplesBetweenElements = int(round(baseSampleCount))
+    farnsworthScale = farnsworthScaleFactor(wpm, fs)
+    samplesBetweenLetters = int(round(baseSampleCount * CHAR_SPACE * farnsworthScale))
+    samplesBetweenWords = int(round(baseSampleCount * WORD_SPACE * farnsworthScale))
+
+    dotArr = np.ones(samplesPerDot, dtype=np.bool)
+    dashArr = np.ones(samplesPerDash, dtype=np.bool)
+    eGapArr = np.zeros(samplesBetweenElements, dtype=np.bool)
+    cGapArr = np.zeros(samplesBetweenLetters, dtype=np.bool)
+    wGapArr = np.zeros(samplesBetweenWords, dtype=np.bool)
+
+    duration = 0
+    prevSpaces = 0
+    prevWasElement = False
+    for c in code:
+        if (c == DOT or c == DASH) and prevWasElement:
+            duration += samplesBetweenElements
+        if c == DOT:
+            duration += samplesPerDot
+            prevSpaces, prevWasElement = 0, True
+        elif c == DASH:
+            duration += samplesPerDash
+            prevSpaces, prevWasElement = 0, True
+        else:  # Assume the char is a space otherwise
+            if prevSpaces == 1:
+                duration += samplesBetweenWords - samplesBetweenLetters
+            elif prevSpaces == 0:
+                duration += samplesBetweenLetters
+            prevSpaces += 1
+            prevWasElement = False
+
+    return duration
+
+
+def morseToBoolArr(code, sps, wpm, fs=None):
+    dps = wpmToDps(wpm)  # dots per second
+    baseSampleCount = sps / dps
+    samplesPerDot = int(round(baseSampleCount))
+    samplesPerDash = int(round(baseSampleCount * DASH_WIDTH))
+    samplesBetweenElements = int(round(baseSampleCount))
+    farnsworthScale = farnsworthScaleFactor(wpm, fs)
+    samplesBetweenLetters = int(round(baseSampleCount * CHAR_SPACE * farnsworthScale))
+    samplesBetweenWords = int(round(baseSampleCount * WORD_SPACE * farnsworthScale))
+
+    dotArr = np.ones(samplesPerDot, dtype=np.bool)
+    dashArr = np.ones(samplesPerDash, dtype=np.bool)
+    eGapArr = np.zeros(samplesBetweenElements, dtype=np.bool)
+    cGapArr = np.zeros(samplesBetweenLetters, dtype=np.bool)
+    wGapArr = np.zeros(samplesBetweenWords, dtype=np.bool)
+
+    pieces = []
+    prevWasSpace = False
+    prevWasElement = False
+    for c in code:
+        if (c == DOT or c == DASH) and prevWasElement:
+            pieces.append(eGapArr)
+        if c == DOT:
+            pieces.append(dotArr)
+            prevWasSpace, prevWasElement = False, True
+        elif c == DASH:
+            pieces.append(dashArr)
+            prevWasSpace, prevWasElement = False, True
+        else:  # Assume the char is a space otherwise
+            if prevWasSpace:
+                pieces[-1] = wGapArr
+            else:
+                pieces.append(cGapArr)
+            prevWasSpace, prevWasElement = True, False
+
+    return np.concatenate(pieces)
+
+
+def wpmToDps(wpm):
+    ''' Words per minute = number of times PARIS can be sent per minute.
+        PARIS takes 50 dot lengths to send.  Returns dots per seconds. '''
+    return wpm * 50 / 60.0
+
+
+def farnsworthScaleFactor(wpm, fs=None):
+    ''' Returns the multiple that character and word spacing should be multiplied by. '''
+    if fs is None:
+        return 1  # Standard (not Farnsworth) word spacing
+    slowWordInterval = 1.0 / fs  # Minutes per word
+    standardWordInterval = 1.0 / wpm
+    extraSpace = slowWordInterval - standardWordInterval
+    extraSpaceDots = (extraSpace / standardWordInterval) * (9 + 10 + 4 * DASH_WIDTH + 4 * CHAR_SPACE + WORD_SPACE)
+    standardSpaceDots = 4 * CHAR_SPACE + WORD_SPACE  # For the word PARIS
+    totalSpaceDots = standardSpaceDots + extraSpaceDots
+    scaleFactor = totalSpaceDots / standardSpaceDots
+    if scaleFactor < 1:
+        return 1
+    return scaleFactor
 
 class Grader(tk.Tk):
 
@@ -407,28 +593,83 @@ class Grader(tk.Tk):
 
         class WordFrame(ttk.LabelFrame):
 
+            class LabeledEntry:
+
+                def __init__(self, container, character, column):
+                    self.answer = tk.StringVar(container)
+                    ttk.Label(container, text=character).grid(column=column, row=0, sticky=tk.S, padx=2, pady=1)
+                    entry = tk.Entry(container, width=3, textvariable=self.answer).grid(column=column, row=1, sticky=tk.N, ipadx=3, ipady=3, padx=2, pady=1)
+                    self.answer.trace("w", self.autocapitalize)
+
+                def get(self):
+                    return self.answer.get()
+
+                def autocapitalize(self, *arg):
+                    self.answer.set(self.answer.get().capitalize())
+
             def __init__(self, container, word):
                 super().__init__(container, text=word)
 
-                self.word = word
-                self.entries = []
+                self.answer = word
+                self.entry = []
 
                 tk.Button(self, text="Play Recording", command=self.play).grid(column=0, row=1, sticky=tk.N, padx=5, pady=1)
 
-                entryNumber = 1
-                for character in list(word):
-                    self.entries.append(tk.StringVar(container))
-                    ttk.Label(self, text=character).grid(column=entryNumber, row=0, sticky=tk.S, padx=2, pady=1)
-                    tk.Entry(self, width=3, textvariable=self.entries[entryNumber - 1]).grid(column=entryNumber, row=1, sticky=tk.N, ipadx=3, ipady=3, padx=2, pady=1)
-                    entryNumber = entryNumber + 1
+                for index in range(0, len(word)):
+                    self.entry.append(self.LabeledEntry(self, self.answer[index], index + 1))
 
                 self.pack(ipadx=5, ipady=5, padx=5, pady=5, anchor='nw', fill='x')
 
             def play(self):
-                filename = self.word + '.wav'
-                in_data, mw = sf.read(filename)
+
+                recording = self.answer
+
+                recording = recording.replace(',', 'comma')
+                recording = recording.replace('!', 'exclimation')
+                recording = recording.replace('?', 'question')
+                recording = recording.replace('=', 'equal')
+                recording = recording.replace('.', 'period')
+                recording = recording.replace('/', 'slash')
+
+                recording = recording + '.wav'
+
+                in_data, mw = sf.read(recording)
                 sd.wait()
                 data = sd.play(in_data, mw)
+
+            def grade(self):
+
+                correct = {}
+                wrong = {}
+                deamons = []
+
+                for character in self.answer:
+                    correct[character] = 0
+                    wrong[character] = 0
+
+                for index in range(0, len(self.answer)):
+                    if self.entry[index].get() == self.answer[index]:
+                        correct[self.answer[index]] = correct[self.answer[index]] + 1
+                    else:
+                        wrong[self.answer[index]] = wrong[self.answer[index]] + 1
+                        if str(self.entry[index].get()) != '':
+                            deamons.append(str(self.answer[index]) + str(self.entry[index].get()))
+
+                # Delete audio file after grading
+                recording = self.answer
+
+                recording = recording.replace(',', 'comma')
+                recording = recording.replace('!', 'exclimation')
+                recording = recording.replace('?', 'question')
+                recording = recording.replace('=', 'equal')
+                recording = recording.replace('.', 'period')
+                recording = recording.replace('/', 'slash')
+
+                recording = recording + '.wav'
+
+                os.remove(recording)
+
+                return (correct, wrong, deamons)
 
         def __init__(self, container, words):
             super().__init__(container)
@@ -440,119 +681,142 @@ class Grader(tk.Tk):
 
             self.pack(padx=5, pady=5, anchor='nw', fill='x')
 
+        def grade(self):
+
+            correct= {}
+            wrong = {}
+            deamons = {}
+
+            for word in self.checkers:
+                correct[word], wrong[word], deamons[word] = self.checkers[word].grade()
+
+            return (correct, wrong, deamons)
+
     def __init__(self, words):
+
+        self.words = words
 
         super().__init__()
         self.title('CWOps Basic Morse Practice Grader')
 
-        self.frame = self.Interface(self, words)
+        self.interface = self.Interface(self, words)
+        tk.Button(self, text="Grade", command=self.grade, padx=5, pady=5).pack()
 
         self.mainloop()
 
-def letterToMorse(letter):
-  if letter in forwardTable:
-    return forwardTable[letter]
-  elif letter.isspace():
-    return ' '
-  else:
-    return ''
+    def grade(self, directory = 'temp'):
 
-def stringToMorse(string):
-  codeArr = [letterToMorse(l) for l in string.upper()]
-  trimmedArr = [code for code in codeArr if code]
-  return ' '.join(trimmedArr)
+        correct, wrong, deamons = self.interface.grade()
 
-def morseSampleDuration(code, sps, wpm, fs=None):
-  dps = wpmToDps(wpm)  # dots per second
-  baseSampleCount = sps/dps
-  samplesPerDot = int(round(baseSampleCount))
-  samplesPerDash = int(round(baseSampleCount * DASH_WIDTH))
-  samplesBetweenElements = int(round(baseSampleCount))
-  farnsworthScale = farnsworthScaleFactor(wpm, fs)
-  samplesBetweenLetters = int(round(baseSampleCount * CHAR_SPACE * farnsworthScale))
-  samplesBetweenWords = int(round(baseSampleCount * WORD_SPACE * farnsworthScale))
+        characterDF = pd.DataFrame()
 
-  dotArr = np.ones(samplesPerDot, dtype=np.bool)
-  dashArr = np.ones(samplesPerDash, dtype=np.bool)
-  eGapArr = np.zeros(samplesBetweenElements, dtype=np.bool)
-  cGapArr = np.zeros(samplesBetweenLetters, dtype=np.bool)
-  wGapArr = np.zeros(samplesBetweenWords, dtype=np.bool)
+        characterDF['character'] = (list(string.ascii_uppercase) + list(string.digits) + list('.?,/='))
+        characterDF['pass'] = 0
+        characterDF['fail'] = 0
 
-  duration = 0
-  prevSpaces = 0
-  prevWasElement = False
-  for c in code:
-    if (c == DOT or c == DASH) and prevWasElement:
-      duration += samplesBetweenElements
-    if c == DOT:
-      duration += samplesPerDot
-      prevSpaces, prevWasElement = 0, True
-    elif c == DASH:
-      duration += samplesPerDash
-      prevSpaces, prevWasElement = 0, True
-    else:  # Assume the char is a space otherwise
-      if prevSpaces == 1:
-        duration += samplesBetweenWords-samplesBetweenLetters
-      elif prevSpaces == 0:
-        duration += samplesBetweenLetters
-      prevSpaces += 1
-      prevWasElement = False
+        for word in correct:
+            for character in correct[word]:
+                index = characterDF.index[characterDF['character'] == character][0]
+                characterDF.at[index, 'pass'] += correct[word][character]
 
-  return duration
+        for word in wrong:
+            for character in wrong[word]:
+                index = characterDF.index[characterDF['character'] == character][0]
+                characterDF.at[index, 'fail'] += wrong[word][character]
 
-def morseToBoolArr(code, sps, wpm, fs=None):
-  dps = wpmToDps(wpm)  # dots per second
-  baseSampleCount = sps/dps
-  samplesPerDot = int(round(baseSampleCount))
-  samplesPerDash = int(round(baseSampleCount * DASH_WIDTH))
-  samplesBetweenElements = int(round(baseSampleCount))
-  farnsworthScale = farnsworthScaleFactor(wpm, fs)
-  samplesBetweenLetters = int(round(baseSampleCount * CHAR_SPACE * farnsworthScale))
-  samplesBetweenWords = int(round(baseSampleCount * WORD_SPACE * farnsworthScale))
+        time_string = time.strftime("%Y%m%d%H%M", time.localtime())
+        filename = directory + '/' + time_string + '.csv'
 
-  dotArr = np.ones(samplesPerDot, dtype=np.bool)
-  dashArr = np.ones(samplesPerDash, dtype=np.bool)
-  eGapArr = np.zeros(samplesBetweenElements, dtype=np.bool)
-  cGapArr = np.zeros(samplesBetweenLetters, dtype=np.bool)
-  wGapArr = np.zeros(samplesBetweenWords, dtype=np.bool)
+        if not os.path.isdir(directory):
+          os.mkdir(directory)
 
-  pieces = []
-  prevWasSpace = False
-  prevWasElement = False
-  for c in code:
-    if (c == DOT or c == DASH) and prevWasElement:
-      pieces.append(eGapArr)
-    if c == DOT:
-      pieces.append(dotArr)
-      prevWasSpace, prevWasElement = False, True
-    elif c == DASH:
-      pieces.append(dashArr)
-      prevWasSpace, prevWasElement = False, True
-    else:  # Assume the char is a space otherwise
-      if prevWasSpace:
-        pieces[-1] = wGapArr
-      else:
-        pieces.append(cGapArr)
-      prevWasSpace, prevWasElement = True, False
+        characterDF.to_csv(filename, index=False)
 
-  return np.concatenate(pieces)
+        # Record deamons
+        filename = 'deamons.csv'
 
-def wpmToDps(wpm):
-  ''' Words per minute = number of times PARIS can be sent per minute.
-      PARIS takes 50 dot lengths to send.  Returns dots per seconds. '''
-  return wpm*50/60.0
+        deamonDF = pd.DataFrame({'deamon': [], 'count': []})
 
-def farnsworthScaleFactor(wpm, fs=None):
-  ''' Returns the multiple that character and word spacing should be multiplied by. '''
-  if fs is None:
-    return 1  # Standard (not Farnsworth) word spacing
-  slowWordInterval = 1.0/fs  # Minutes per word
-  standardWordInterval = 1.0/wpm
-  extraSpace = slowWordInterval-standardWordInterval
-  extraSpaceDots = (extraSpace/standardWordInterval) * (9+10+4*DASH_WIDTH+4*CHAR_SPACE+WORD_SPACE)
-  standardSpaceDots = 4*CHAR_SPACE + WORD_SPACE  # For the word PARIS
-  totalSpaceDots = standardSpaceDots + extraSpaceDots
-  scaleFactor = totalSpaceDots / standardSpaceDots
-  if scaleFactor < 1:
-    return 1
-  return scaleFactor
+        if os.path.exists(filename):
+            deamonDF = pd.read_csv(filename)
+
+        for word in deamons:
+            for deamon in deamons[word]:
+                if deamon in deamonDF.values:
+                    index = deamonDF.index[deamonDF['deamon'] == deamon][0]
+                    deamonDF.at[index, 'count'] += int(1)
+                else:
+                    deamonDF.loc[len(deamonDF.index)] = [deamon, int(1)]
+
+            deamonDF.to_csv(filename, index=False)
+
+            # Close the interface
+            self.destroy()
+
+
+class Performance(tk.Tk):
+
+    characterDF = pd.DataFrame()
+    sessionDF = pd.DataFrame()
+
+    def __init__(self, directory = 'temp'):
+
+        if os.path.isdir(directory):
+            for entry in os.scandir(directory):
+                if entry.path.endswith('.csv') and entry.is_file():
+
+                    csvDF = pd.read_csv(entry.path)
+
+                    # Calculate letter percentages
+                    if self.characterDF.empty:
+                        self.characterDF = csvDF
+                    else:
+                        self.characterDF = pd.merge(self.characterDF, csvDF, how='outer', on='character', suffixes=('_l', '_r'))
+
+                        self.characterDF.fillna(0, inplace=True)
+
+                        self.characterDF['pass'] = self.characterDF['pass_l'] + self.characterDF['pass_r']
+                        self.characterDF['fail'] = self.characterDF['fail_l'] + self.characterDF['fail_r']
+
+                        self.characterDF.astype({'fail_r': 'float'}).dtypes
+                        self.characterDF.astype({'pass_r': 'float'}).dtypes
+
+                        self.characterDF['last pass percentage'] = (self.characterDF['pass_r'] / (self.characterDF['pass_r'] + self.characterDF['fail_r'])) * 100
+
+                        self.characterDF.drop(columns=['pass_l', 'pass_r', 'fail_l', 'fail_r'], inplace=True)
+
+                    # Calculate session percentages
+                    total_fails = csvDF['fail'].sum()
+                    total_passes = csvDF['pass'].sum()
+                    total_attempts = total_fails + total_passes
+                    percent_correct = (total_passes / total_attempts) * 100
+
+                    if self.sessionDF.empty:
+                        self.sessionDF = pd.DataFrame([[entry.name, (csvDF['pass'].sum() / (csvDF['pass'].sum() + csvDF['fail'].sum())) * 100]], columns=['sessions', 'percentage'])
+                    else:
+                        self.sessionDF.loc[len(self.sessionDF.index)] = [entry.name, (csvDF['pass'].sum() / (csvDF['pass'].sum() + csvDF['fail'].sum())) * 100]
+
+        self.characterDF.astype({'fail': 'float'}).dtypes
+        self.characterDF.astype({'pass': 'float'}).dtypes
+        self.characterDF['pass percentage'] = (self.characterDF['pass'] / (self.characterDF['pass'] + self.characterDF['fail'])) * 100
+
+        self.characterDF.sort_values('pass percentage', ascending=False, inplace=True)
+
+    def plot(self):
+
+        # Plot character percentages
+        tempDF = self.characterDF
+        tempDF.drop(columns=['pass', 'fail'], inplace=True)
+        tempDF.set_index('character', inplace=True)
+        tempDF.rename(columns={'pass percentage':'average', 'last pass percentage':'last run'}, inplace=True)
+
+        tempDF.plot.bar(rot=0, color={'average':'blue', 'last run':'orange'}, title='Percentage Correct')
+        plt.show()
+
+        # Plot session percentages
+        tempDF = self.sessionDF
+        tempDF.set_index('sessions', inplace=True)
+        tempDF.plot.line(rot=0, color={'percentage':'blue'}, title='ICR Percentage')
+
+        plt.gca().axes.get_xaxis().set_visible(False)
+        plt.show()

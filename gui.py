@@ -263,15 +263,20 @@ class window(tk.Tk):
 
     def getResults(self):
 
-        results = {}
+        correct = {}
+        wrong = {}
+
+        for character in self.word:
+            correct[character] = 0
+            wrong[character] = 0
 
         for i in range(0, len(self.word)):
-            if self.word[i] in results.keys():
-                results[self.word[i]] += self.checkButtonVar[i].get()
+            if self.checkButtonVar[i].get():
+                correct[self.word[i]] = correct[self.word[i]] + 1
             else:
-                results[self.word[i]] = self.checkButtonVar[i].get()
+                wrong[self.word[i]] = wrong[self.word[i]] + 1
 
-        return results
+        return (correct, wrong)
 
 class results(ttk.Frame):
 

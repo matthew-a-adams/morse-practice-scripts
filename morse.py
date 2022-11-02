@@ -274,7 +274,7 @@ class message:
   numberOfWords = 1
   numberOfCharacters = 1
 
-  def __init__(self, charactersPerWord=1, wordsPerPhrase=1, alphabet=list(string.digits) + list(string.ascii_uppercase) + list('.?,/')):
+  def __init__(self, charactersPerWord=1, wordsPerPhrase=1, alphabet=list(string.digits) + list(string.ascii_uppercase) + list('.?,/=')):
 
     self.alphabet = alphabet
     self.numberOfWords = wordsPerPhrase
@@ -309,7 +309,7 @@ class grader:
 
   def __init__(self, outputDirectory = 'scores'):
 
-    self.record['character'] = (list(string.ascii_uppercase) + list(string.digits) + list('.?,/'))
+    self.record['character'] = (list(string.ascii_uppercase) + list(string.digits) + list('.?,/='))
     self.record['pass'] = 0
     self.record['fail'] = 0
     self.directory = outputDirectory
@@ -361,16 +361,15 @@ class grader:
       test = gui.window(word, entry)
       test.mainloop()
 
-      results = test.getResults()
+      correct, wrong = test.getResults()
 
-      for character in results:
-
+      for character in correct:
         index = self.record.index[self.record['character'] == character][0]
+        self.record.at[index, 'pass'] += correct[character]
 
-        if results[character].get() == 1:
-          self.record.at[index, 'pass'] += 1
-        else:
-          self.record.at[index, 'fail'] += 1
+      for character in wrong:
+        index = self.record.index[self.record['character'] == character][0]
+        self.record.at[index, 'fail'] += wrong[character]
 
       entry = entry + 1
 

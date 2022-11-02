@@ -1,16 +1,11 @@
 #!/usr/bin/env python3
 
 from __future__ import division, print_function
-import string, time, random, itertools, msvcrt, pyttsx3
+import string, time, random, msvcrt
 import sounddevice as sd
 import numpy as np
 from scipy import io
 import scipy.io.wavfile
-
-from pydub import AudioSegment
-import subprocess
-import os
-#from gtts import gTTS
 
 import morse
 
@@ -22,25 +17,52 @@ FS = 10
 AUDIO_PADDING = 0.5  # Seconds
 CLICK_SMOOTH = 2  # Tone periods
 
-
-def main(freq, wpm, fs, characters, limit, delay, obfuscate, prompt, outFile, inFile):
-
-  if len(inFile) > 0:
-    file_handle = open(inFile, 'r')
-    messages = file_handle.readlines()
-  else:
-    messages = list(string.ascii_uppercase + string.digits + '.?,/')
-    if characters > 0:
-      combinations = list(itertools.combinations(messages, characters))
-      messages = []
-      for combo in combinations:
-        message = ''.join(combo)
-        messages.append(message)
-
-  if limit > 0:
-    messages = random.choices(messages, k=limit)
-
-  #print('Message =', message)
+def main(freq, wpm, fs, prompt, outFile):
+  qso_words = [
+    ['QRL?', 'QRL QUESTION'],
+    ['CQ', 'CQ'],
+    ['DE', 'DE'],
+    ['TNX', 'TNX THANKS'],
+    ['FOR', 'FOR'],
+    ['CALL', 'CALL'],
+    ['UR', 'UR YOUR'],
+    ['RST', 'RST'],
+    ['QTH', 'QTH'],
+    ['NR', 'NR NEAR'],
+    ['IS', 'IS'],
+    ['IN', 'IN'],
+    ['HW', 'HW HOW'],
+    ['CPY', 'CPY COPY'],
+    ['FER', 'FER FOR'],
+    ['INFO', 'INFO'],
+    ['RIG', 'RIG'],
+    ['AT', 'AT'],
+    ['ANT', 'ANT ANTENNA'],
+    ['QSO', 'QSO'],
+    ['AGN?', 'AGN QUESTION AGAIN'],
+    ['WX', 'WX WEATHER'],
+    ['BCNU', 'BCNU BE SEEING YOU'],
+    ['HERE', 'HERE'],
+    ['TU', 'TU THANK YOU'],
+    ['THANK YOU', 'THANK YOU'],
+    ['BTU', 'BTU BACK TO YOU'],
+    ['SOON', 'SOON']
+    ['OK', 'OK'],
+    ['GL', 'GL GOOD LUCK'],
+    ['GD', 'GD GOOD DAY'],
+    ['GA', 'GA GOOD AFTERNOON'],
+    ['GE', 'GE GOOD EVENING'],
+    ['GM', 'GM GOOD MORNING'],
+    ['THANKS', 'THANKS'],
+    ['NICE', 'NICE'],
+    ['DAY', 'DAY'],
+    ['HOPE', 'HOPE'],
+    ['TO', 'TO'],
+    ['WORK', 'WORK'],
+    ['CUL', 'CUL SEE YOU LATER'],
+    ['HR', 'HR HERE'],
+    ['ES', 'ES AND']
+  ]
 
   if prompt:
     # Load spoken letter WAV files
@@ -48,112 +70,56 @@ def main(freq, wpm, fs, characters, limit, delay, obfuscate, prompt, outFile, in
     sps = letterNames[LETTERS[0]][0]
   else:
     sps = SPS
+
+  print()
   print('Audio samples per second =', sps)
   print('Tone period     =', round(1000/freq, 1), 'ms')
 
   dps = morse.wpmToDps(wpm)  # Dots per second
   mspd = 1000/dps  # Dot duration in milliseconds
   farnsworthScale = morse.farnsworthScaleFactor(wpm, fs)
+
   print('Dot width       =', round(mspd, 1), 'ms')
   print('Dash width      =', int(round(mspd * morse.DASH_WIDTH)), 'ms')
   print('Character space =', int(round(mspd * morse.CHAR_SPACE * farnsworthScale)), 'ms')
   print('Word space      =', int(round(mspd * morse.WORD_SPACE * farnsworthScale)), 'ms')
+  print()
 
-  card_index = 1
-  synthesizer = pyttsx3.init()
+  testMessages(qso_words, sps, wpm, fs, freq)
 
-  for message in messages:
+def testMessages(messages, sps, wpm, fs, freq):
 
-    # Chope newline character for file input
-    if len(inFile) > 0:
-      message = message[:-1]
+  random.shuffle(messages)
 
-    # Compute morse code audio from plain text
-    #playMessage(message, sps, wpm, fs, freq)
+  # Keep track of failed messages and retest until all have been correctly tested.
+  continue_with_test = True
 
-    audio = stringToMorseAudio(message, sps, wpm, fs, freq, 0.5, None, promptVolume=0.3)
-    audio /= 2
-    io.wavfile.write('code.wav', sps, (audio * 2 ** 15).astype(np.int16))
+  while continue_with_test:
 
-    time.sleep(3)
+    missed_count = 0
+    continue_with_test = False
+    retest_messages = []
 
-    # Speak the message after a few secconds
-    #voice = gTTS(text=message, lang='en', slow=False)
-    #voice.save('voice.mp3')
+    for message, definition in messages:
 
-    say = ''
+      # Compute morse code audio from plain text
+      playMessage(message, sps, wpm, fs, freq)
 
-    if characters > 0:
-      say = ''
-      for character in message:
-        if character == '.':
-          say = say + 'PERIOD  '
-        elif character == '?':
-          say = say + 'QUESTION MARK  '
-        elif character == ',':
-          say = say + 'COMMA  '
-        elif character == '/':
-          say = say + 'FORWARD SLASH  '
-        elif character == '=':
-          say = say + 'DOUBLE DASH  '
-        else:
-          say = say + character + '  '
-    else:
-      if message == '.':
-        say = 'PERIOD'
-      elif message == '?':
-        say = 'QUESTION MARK'
-      elif message == ',':
-        say = 'COMMA'
-      elif message == '/':
-        say = 'FORWARD SLASH'
-      elif message == '=':
-        say = 'DOUBLE DASH'
+      print('Enter message:')
+      start = time.time()
+      check = input()
+
+      if check.upper() == message.upper():
+        end = time.time()
+        print('Correct! [', '{:.2f}'.format(end-start), 's]')
       else:
-        say = message
+        print('Wrong. The correct answer is ', message)
+        retest_messages.append([message, definition])
+        continue_with_test = True
+        missed_count = missed_count + 1
 
-    synthesizer.save_to_file(say, 'voice.mp3')
-    synthesizer.runAndWait()
-    synthesizer.stop()
-
-    if os.path.exists('voice.wav'):
-      os.remove('voice.wav')
-
-    subprocess.call(['ffmpeg', '-i', 'voice.mp3', 'voice.wav', '-hide_banner', '-loglevel', 'error'])
-
-    #synthesizer.say(message)
-    #synthesizer.runAndWait()
-    #synthesizer.stop()
-
-    code_audio = AudioSegment.from_file('code.wav', format='wav')
-    three_second_silence = AudioSegment.silent(duration=(delay*1000))
-    voice_audio = AudioSegment.from_mp3('voice.wav')
-
-    audio_flashcard = code_audio + three_second_silence + voice_audio
-
-    if obfuscate:
-      flashcard_filename = 'flashcards/' + str(inFile) + str('{:02d}'.format(card_index)) + '.mp3'
-    else:
-
-      if message == '.':
-        flashcard_name =  'PERIOD'
-      elif message == '?':
-        flashcard_name =  'QUESTION MARK'
-      elif message == ',':
-        flashcard_name =  'COMMA'
-      elif message == '/':
-        flashcard_name =  'FORWARD SLASH'
-      elif message == '=':
-        say = 'DOUBLE DASH'
-      else:
-        flashcard_name  = message
-
-      flashcard_filename = 'flashcards/' + flashcard_name + '.mp3'
-
-    print('Writing ', message, ' to card', flashcard_filename)
-    audio_flashcard.export(flashcard_filename, format='mp3')
-
-    card_index = card_index + 1
+    print('You missed ', missed_count, '. Retesting missed letters...')
+    messages = retest_messages
 
 
 def playMessage(message, sps, wpm, fs, freq):
@@ -249,18 +215,13 @@ def playBlock(array, sps=SPS):
 if __name__ == '__main__':
   import sys, argparse
 
-  parser = argparse.ArgumentParser(description='Convert text to morse code to audio flashcard.')
+  parser = argparse.ArgumentParser(description='Convert text to morse code audio.')
   parser.add_argument('-f', type=float, default=FREQ, help='Tone frequency')
   parser.add_argument('--wpm', type=float, default=WPM, help='Words per minute')
   parser.add_argument('--fs', type=float, default=FS, help='Farnsworth speed')
-  parser.add_argument('--characters', type=int, default='0', help='Number of random characters in a card')
-  parser.add_argument('--limit', type=int, default='0', help='The maximum number of cards to generate')
-  parser.add_argument('--delay', type=float, default=5, help='Delay time between code and spoken answer')
-  parser.add_argument('--obfuscate', action='store_true', default=False, help='Do not use message for flashcard file name')
   parser.add_argument('-p', action='store_true', default=False, help='Say letters along with morse code')
   parser.add_argument('-o', type=str, default='', help='Output to given WAV file instead of playing sound')
-  parser.add_argument('-i', type=str, default='', help='Input from text file')
   args = parser.parse_args()
 
-  main(args.f, args.wpm, args.fs, args.characters, args.limit, args.delay, args.obfuscate, args.p, args.o, args.i)
+  main(args.f, args.wpm, args.fs, args.p, args.o)
 
