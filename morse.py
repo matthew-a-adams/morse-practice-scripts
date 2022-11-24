@@ -155,18 +155,18 @@ class audio:
     self.wpm = wpm
     self.fs = fs
 
-    print('Audio samples per second =', self.sps)
-    print('Tone period     =', round(1000 / self.freq, 1), 'ms')
+    #print('Audio samples per second =', self.sps)
+    #print('Tone period     =', round(1000 / self.freq, 1), 'ms')
 
     dps = wpmToDps(self.wpm)  # Dots per second
     mspd = 1000 / dps  # Dot duration in milliseconds
     farnsworthScale = farnsworthScaleFactor(self.wpm)
-    print('Dot width       =', round(mspd, 1), 'ms')
-    print('Dash width      =', int(round(mspd * DASH_WIDTH)), 'ms')
-    print('Character space =', int(round(mspd * CHAR_SPACE * farnsworthScale)), 'ms')
+    #print('Dot width       =', round(mspd, 1), 'ms')
+    #print('Dash width      =', int(round(mspd * DASH_WIDTH)), 'ms')
+    #print('Character space =', int(round(mspd * CHAR_SPACE * farnsworthScale)), 'ms')
 
     self.word_space = int(round(mspd * WORD_SPACE * farnsworthScale/4))
-    print('Word space      =', self.word_space, 'ms (', float(self.word_space/1000), 's)')
+    #print('Word space      =', self.word_space, 'ms (', float(self.word_space/1000), 's)')
 
   def play(self, message, recordMic = False):
 
